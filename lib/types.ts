@@ -9,17 +9,21 @@ export interface ContentAnalysis {
     emotional_driver: string;
 }
 
+export interface ScriptSegment {
+    text: string;
+}
+
 export interface SameTopicVariation {
-    angle_type: string;       // The archetype: Rant, Analyst, Storyteller, Contrarian, Coach
-    hooks: string[];          // 3 distinct hook options
-    script_body: string;      // Teleprompter-formatted body
-    retention_tactic: string; // Strategy explanation
+    angle_type: string;           // The archetype: Rant, Analyst, Storyteller, Contrarian, Coach
+    hooks: string[];              // 3 distinct hook options
+    script_content: ScriptSegment[]; // Visual cuts - distinct segments
+    retention_tactic: string;     // Strategy explanation
 }
 
 export interface AdjacentTopicVariation {
-    pivot_type: string;       // The pivot: Trap, Secret, Next Level, Origin Story, Comparison
-    hooks: string[];          // 3 distinct hook options
-    script_body: string;      // Teleprompter-formatted body
+    pivot_type: string;           // The pivot: Trap, Secret, Next Level, Origin Story, Comparison
+    hooks: string[];              // 3 distinct hook options
+    script_content: ScriptSegment[]; // Visual cuts - distinct segments
     pivot_topic: string;
     structure_preserved: string;
 }

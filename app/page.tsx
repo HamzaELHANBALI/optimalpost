@@ -318,7 +318,7 @@ export default function Home() {
                       <ResultCard
                         key={index}
                         hooks={item.hooks}
-                        body={item.script_body}
+                        content={item.script_content}
                         angleType={item.angle_type}
                         label={item.retention_tactic}
                         variant="double-down"
@@ -344,7 +344,7 @@ export default function Home() {
                       <ResultCard
                         key={index}
                         hooks={item.hooks}
-                        body={item.script_body}
+                        content={item.script_content}
                         pivotType={item.pivot_type}
                         label={item.pivot_topic}
                         sublabel={item.structure_preserved}
