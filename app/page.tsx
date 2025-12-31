@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Repeat, Sparkles, History, Beaker, Loader2, AlertCircle, Zap, Brain, Heart, Target, Layers } from 'lucide-react';
+import { Repeat, Sparkles, History, Beaker, Loader2, AlertCircle, Zap, Brain, Heart, Target, Layers, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
-import { Badge } from '@/components/ui/badge';
 import { ResultCard } from '@/components/result-card';
 import { HistorySidebar } from '@/components/history-sidebar';
 import { useAssetLibrary } from '@/hooks/use-asset-library';
@@ -18,9 +17,9 @@ import { AnalysisResult } from '@/lib/types';
 const loadingMessages = [
   'Analyzing hook patterns...',
   'Breaking down structure...',
-  'Identifying retention mechanics...',
+  'Identifying your niche...',
+  'Finding adjacent topics...',
   'Generating variations...',
-  'Crafting new angles...',
 ];
 
 export default function Home() {
@@ -42,7 +41,7 @@ export default function Home() {
       setResult({
         analysis: currentSession.analysis,
         same_topic_variations: currentSession.sameTopicVariations,
-        new_topic_variations: currentSession.newTopicVariations,
+        adjacent_topic_variations: currentSession.adjacentTopicVariations,
       });
     }
   }, [currentSession]);
@@ -86,7 +85,7 @@ export default function Home() {
         inputType,
         analysis: data.analysis,
         sameTopicVariations: data.same_topic_variations,
-        newTopicVariations: data.new_topic_variations,
+        adjacentTopicVariations: data.adjacent_topic_variations,
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
@@ -248,6 +247,15 @@ export default function Home() {
                       <p className="text-sm text-muted-foreground pl-6">{result.analysis.structure}</p>
                     </div>
 
+                    {/* Niche & Audience */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-cyan-500" />
+                        <span className="text-sm font-medium">Niche & Audience</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground pl-6">{result.analysis.niche_and_audience}</p>
+                    </div>
+
                     {/* Retention */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
@@ -265,16 +273,15 @@ export default function Home() {
                       </div>
                       <p className="text-sm text-muted-foreground pl-6">{result.analysis.emotional_driver}</p>
                     </div>
-                  </div>
 
-                  {/* Topic Angle - Full Width */}
-                  <Separator />
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-orange-500" />
-                      <span className="text-sm font-medium">Topic & Angle</span>
+                    {/* Topic Angle */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-orange-500" />
+                        <span className="text-sm font-medium">Topic & Angle</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground pl-6">{result.analysis.topic_angle}</p>
                     </div>
-                    <p className="text-sm text-muted-foreground pl-6">{result.analysis.topic_angle}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -291,7 +298,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">Same Topic</h3>
-                      <p className="text-xs text-muted-foreground">Recreate the video with fresh takes</p>
+                      <p className="text-xs text-muted-foreground">Recreate the video with fresh hooks</p>
                     </div>
                   </div>
                   <div className="space-y-3">
@@ -307,23 +314,23 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* New Topics Column */}
+                {/* Adjacent Topics Column */}
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
                       <Sparkles className="h-5 w-5 text-purple-500" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-lg">New Topics</h3>
-                      <p className="text-xs text-muted-foreground">Apply the formula to different topics</p>
+                      <h3 className="font-semibold text-lg">Adjacent Topics</h3>
+                      <p className="text-xs text-muted-foreground">Same niche, different subjects</p>
                     </div>
                   </div>
                   <div className="space-y-3">
-                    {result.new_topic_variations.map((item, index) => (
+                    {result.adjacent_topic_variations.map((item, index) => (
                       <ResultCard
                         key={index}
                         content={item.content}
-                        label={`${item.new_topic}`}
+                        label={item.pivot_topic}
                         sublabel={item.structure_preserved}
                         variant="experiment"
                         index={index}

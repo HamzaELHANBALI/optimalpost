@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { Session, ContentAnalysis, SameTopicVariation, NewTopicVariation } from '@/lib/types';
+import { Session } from '@/lib/types';
 
 interface AssetLibraryContextType {
     sessions: Session[];

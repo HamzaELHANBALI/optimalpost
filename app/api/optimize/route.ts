@@ -9,7 +9,8 @@ const analysisSchema = z.object({
         hook: z.string().describe('What hook was used to grab attention in the first 1-3 seconds? Be specific.'),
         structure: z.string().describe('Break down the script structure: Opening → Build-up → Payoff. What pattern does it follow?'),
         retention_mechanics: z.string().describe('What psychological triggers keep viewers watching? (curiosity gaps, open loops, pattern interrupts, etc.)'),
-        topic_angle: z.string().describe('What is the core topic and the unique angle/perspective taken?'),
+        niche_and_audience: z.string().describe('What niche is this content in? Who is the target audience? (e.g., "Software engineering - targeting junior developers and CS students")'),
+        topic_angle: z.string().describe('What is the specific topic and the unique angle/perspective taken?'),
         emotional_driver: z.string().describe('What emotion does this content trigger? (fear, curiosity, aspiration, controversy, etc.)'),
     }).describe('Detailed breakdown of why this content worked'),
 
@@ -18,11 +19,11 @@ const analysisSchema = z.object({
         hook_used: z.string().describe('Brief description of the hook approach'),
     })).length(3).describe('3 scripts using the SAME topic but with different hooks/angles. These are for recreating the video with fresh takes.'),
 
-    new_topic_variations: z.array(z.object({
+    adjacent_topic_variations: z.array(z.object({
         content: z.string().describe('The full script variation'),
-        new_topic: z.string().describe('The new topic this variation explores'),
+        pivot_topic: z.string().describe('What adjacent topic within the same niche this explores'),
         structure_preserved: z.string().describe('What structural elements were kept from the original'),
-    })).length(3).describe('3 scripts applying the SAME winning structure/hook pattern to DIFFERENT topics. These expand your content into new territories.'),
+    })).length(3).describe('3 scripts pivoting to ADJACENT topics within the SAME NICHE. Example: if original is about "dev tools", pivot to "soft skills for devs" or "career tips for engineers" - same audience, different subject.'),
 });
 
 const systemPrompt = `You are a viral content analyst and scriptwriter for short-form video (TikTok, Reels, Shorts).
@@ -36,6 +37,7 @@ When analyzing content, identify:
 - **THE HOOK**: How does it grab attention instantly? (Question? Bold claim? Pattern interrupt? Visual cue reference?)
 - **THE STRUCTURE**: What's the narrative arc? (Problem→Solution, Myth→Truth, Story→Lesson, List format, etc.)
 - **RETENTION MECHANICS**: What keeps people watching? (Curiosity gaps, "wait for it", escalation, open loops)
+- **NICHE & AUDIENCE**: Who is this content for? What community/industry does it serve?
 - **EMOTIONAL TRIGGERS**: What feelings does it evoke? (FOMO, controversy, aspiration, relatability, shock)
 
 ## Script Generation Rules
@@ -47,12 +49,17 @@ For "Same Topic Variations" (Recreating the video):
 - Refresh examples and specific details
 - These should feel like "takes 2, 3, 4" of the same video
 
-For "New Topic Variations" (Branching out):
-- PRESERVE the winning structure that worked
-- PRESERVE the hook pattern/style
-- Apply these to COMPLETELY DIFFERENT topics
-- The new topics should appeal to a similar or adjacent audience
-- These should feel like "what if I used this formula for X instead?"
+For "Adjacent Topic Variations" (Pivoting within the niche):
+- STAY WITHIN THE SAME NICHE - same target audience
+- PRESERVE the winning structure and hook pattern
+- PIVOT to a RELATED but DIFFERENT subject that the same audience cares about
+- Example: If original is "tools every software engineer needs", adjacent topics could be:
+  - "Soft skills that get developers promoted"
+  - "Mistakes junior developers make"
+  - "How to prepare for tech interviews"
+  - "Side projects that impress recruiters"
+- NOT a completely different niche (don't go from coding to cooking)
+- These should feel like "what else would my audience want to learn?"
 
 Match the original's length, tone, and energy level precisely.`;
 
