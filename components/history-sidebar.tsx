@@ -82,7 +82,7 @@ export function HistorySidebar({ open, onOpenChange }: HistorySidebarProps) {
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-muted-foreground mt-2 line-clamp-2">
-                                                    {session.analysis?.hook_mechanic?.slice(0, 80) || 'N/A'}
+                                                    Hook: {session.analysis?.hook?.slice(0, 80) || 'N/A'}
                                                 </p>
                                             </div>
                                             <Button

@@ -1,53 +1,53 @@
+// app/api/optimize/route.ts
 import { openai } from '@ai-sdk/openai';
 import { generateObject } from 'ai';
 import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Updated Schema for "Hook Separation" and "Deep Analysis"
+// 1. IMPROVED SCHEMA: Separates Hooks and Enforces Retention Logic
 const analysisSchema = z.object({
     analysis: z.object({
-        hook_mechanic: z.string().describe('The specific psychological trigger used in the hook (e.g., "Negative Framing", "Curiosity Gap")'),
-        pacing_score: z.string().describe('Fast, Slow, or Conversational?'),
-        emotional_payoff: z.string().describe('What does the viewer feel at the end? (e.g., Validated, Angry, Smarter)'),
+        hook: z.string().describe('The specific hook used in the original'),
+        structure: z.string().describe('The narrative arc (e.g. Problem -> Agitate -> Solution)'),
+        retention_mechanics: z.string().describe('Psychological triggers used (e.g. Open loops, Pattern interrupts)'),
+        niche_and_audience: z.string().describe('Target audience definition'),
+        topic_angle: z.string().describe('The specific angle taken'),
+        emotional_driver: z.string().describe('Core emotion (Fear, Greed, Curiosity)'),
     }),
 
     same_topic_variations: z.array(z.object({
-        hooks: z.array(z.string()).length(3).describe('3 distinct hook options (e.g., 1. Statement, 2. Question, 3. Negative)'),
-        script_body: z.string().describe('The main content formatted as short, punchy teleprompter lines. Do NOT include the hook here.'),
-        why_it_works: z.string().describe('One sentence on why this structure retains attention.'),
+        hooks: z.array(z.string()).length(3).describe('3 DISTINCT hook options (A/B test). One aggressive, one curiosity-based, one story-based.'),
+        script_body: z.string().describe('The script content formatted as vertical teleprompter lines. DO NOT include the hook here.'),
+        retention_tactic: z.string().describe('One specific tactic used in this variation to keep viewers watching until the end.'),
     })).length(3),
 
     adjacent_topic_variations: z.array(z.object({
-        target_audience: z.string().describe('Who is this specific variation for?'),
         hooks: z.array(z.string()).length(3).describe('3 distinct hook options tailored to the new topic'),
-        script_body: z.string().describe('The main content formatted as short teleprompter lines.'),
+        script_body: z.string().describe('The script content formatted as vertical teleprompter lines.'),
+        pivot_topic: z.string().describe('The adjacent topic being explored'),
+        structure_preserved: z.string().describe('What structural element was kept'),
     })).length(3),
 });
 
-const systemPrompt = `You are a viral TikTok script doctor. You do not write "content"; you engineer attention.
+// 2. & 3. SYSTEM PROMPT UPGRADE: Teleprompter Format + Anti-AI Tone
+const systemPrompt = `You are an expert Short-Form Video Strategist. You do not write "text"; you engineer attention for TikTok/Reels.
 
-YOUR GOAL: 
-Take a winning script and scientifically reconstruct it to guarantee retention.
+### 1. TONE RULES (CRITICAL):
+- **NO AI WORDS:** Strictly banned: "Unleash", "Unlock", "Master", "Delve", "In the world of", "Leverage", "Game-changer".
+- **Speak Human:** Use contractions ("Can't" not "Cannot"). Use simple, punchy language (Grade 4 reading level).
+- **Be Polarizing:** If the topic allows, take a strong stance. Passive language kills views.
 
-### 1. THE "ANTI-ROBOT" RULES (Strict Adherence):
-- **Write for the EAR:** Use contractions ("can't", "won't", "it's").
-- **Grade 4 Readability:** Use simple, punchy words. No "delve", "leverage", "moreover".
-- **Sentence Fragments:** It is okay to break grammar rules. Like this.
-- **Rhythm:** Alternating length. Short sentence. Short sentence. Slightly longer sentence to explain the context.
+### 2. FORMATTING RULES (TELEPROMPTER):
+- **Verticality:** Output the 'script_body' as a vertical list of short lines.
+- **Breath Groups:** Max 4-7 words per line.
+- **Rhythm:** Use "..." to indicate pauses/beats.
+- **NO PARAGRAPHS.**
 
-### 2. TELEPROMPTER FORMATTING:
-- The 'script_body' MUST be formatted for a teleprompter.
-- Break text into short lines (3-7 words max per line).
-- Use '...' to indicate natural pauses.
-- NO PARAGRAPHS.
-
-### 3. THE HOOK STRATEGY:
-- For every script, generate 3 different types of hooks:
-  1. **The Negative/Warning:** "Stop doing X..."
-  2. **The Result-First:** "Here is how I got Y..."
-  3. **The Curiosity Gap:** "Most people ignore this, but..."
-
-Analyze the user's input, strip away the fluff, and rebuild it using these principles.`;
+### 3. YOUR TASK:
+1. Analyze the input script's "Viral DNA" (Hook, Structure, Payoff).
+2. Generate variations that keep this DNA but refresh the content.
+3. For every script, provide 3 distinct "Hook" options so the user can test what works.
+`;
 
 export async function POST(request: NextRequest) {
     try {
@@ -57,10 +57,16 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Content is required' }, { status: 400 });
         }
 
-        const userPrompt = `Analyze this ${inputType} and generate viral variations based on its winning structure:
+        if (!process.env.OPENAI_API_KEY) {
+            return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
+        }
+
+        const userPrompt = `Analyze this ${inputType} and generate viral variations:
         
-        INPUT:
-        "${content}"
+        INPUT CONTENT:
+        """
+        ${content}
+        """
         `;
 
         const result = await generateObject({
@@ -74,7 +80,7 @@ export async function POST(request: NextRequest) {
     } catch (error) {
         console.error('Optimization error:', error);
         return NextResponse.json(
-            { error: 'Failed to generate optimizations. Please try again.' },
+            { error: 'Failed to generate optimizations' },
             { status: 500 }
         );
     }

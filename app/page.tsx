@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Repeat, Sparkles, History, Beaker, Loader2, AlertCircle, Zap, Brain, Heart, Target, Users } from 'lucide-react';
+import { Repeat, Sparkles, History, Beaker, Loader2, AlertCircle, Zap, Brain, Heart, Target, Users, Layers } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -228,37 +228,70 @@ export default function Home() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid sm:grid-cols-3 gap-4">
-                    {/* Hook Mechanic */}
+                  <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {/* Hook */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Zap className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm font-medium">Hook Mechanic</span>
+                        <span className="text-sm font-medium">The Hook</span>
                       </div>
                       <p className="text-sm text-muted-foreground pl-6">
-                        {result.analysis.hook_mechanic || result.analysis.hook || 'N/A'}
+                        {result.analysis.hook}
                       </p>
                     </div>
 
-                    {/* Pacing */}
+                    {/* Structure */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-green-500" />
-                        <span className="text-sm font-medium">Pacing</span>
+                        <Layers className="h-4 w-4 text-green-500" />
+                        <span className="text-sm font-medium">Structure</span>
                       </div>
                       <p className="text-sm text-muted-foreground pl-6">
-                        {result.analysis.pacing_score || result.analysis.structure || 'N/A'}
+                        {result.analysis.structure}
                       </p>
                     </div>
 
-                    {/* Emotional Payoff */}
+                    {/* Retention Mechanics */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Target className="h-4 w-4 text-purple-500" />
+                        <span className="text-sm font-medium">Retention Mechanics</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground pl-6">
+                        {result.analysis.retention_mechanics}
+                      </p>
+                    </div>
+
+                    {/* Niche & Audience */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-cyan-500" />
+                        <span className="text-sm font-medium">Niche & Audience</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground pl-6">
+                        {result.analysis.niche_and_audience}
+                      </p>
+                    </div>
+
+                    {/* Topic Angle */}
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Sparkles className="h-4 w-4 text-orange-500" />
+                        <span className="text-sm font-medium">Topic & Angle</span>
+                      </div>
+                      <p className="text-sm text-muted-foreground pl-6">
+                        {result.analysis.topic_angle}
+                      </p>
+                    </div>
+
+                    {/* Emotional Driver */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Heart className="h-4 w-4 text-red-500" />
-                        <span className="text-sm font-medium">Emotional Payoff</span>
+                        <span className="text-sm font-medium">Emotional Driver</span>
                       </div>
                       <p className="text-sm text-muted-foreground pl-6">
-                        {result.analysis.emotional_payoff || result.analysis.emotional_driver || 'N/A'}
+                        {result.analysis.emotional_driver}
                       </p>
                     </div>
                   </div>
@@ -285,9 +318,8 @@ export default function Home() {
                       <ResultCard
                         key={index}
                         hooks={item.hooks}
-                        scriptBody={item.script_body}
-                        content={item.content}
-                        label={item.why_it_works || item.hook_used}
+                        body={item.script_body}
+                        label={item.retention_tactic}
                         variant="double-down"
                         index={index}
                       />
@@ -311,9 +343,9 @@ export default function Home() {
                       <ResultCard
                         key={index}
                         hooks={item.hooks}
-                        scriptBody={item.script_body}
-                        content={item.content}
-                        label={item.target_audience || item.pivot_topic}
+                        body={item.script_body}
+                        label={item.pivot_topic}
+                        sublabel={item.structure_preserved}
                         variant="experiment"
                         index={index}
                       />
