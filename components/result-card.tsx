@@ -9,21 +9,36 @@ import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Separator } from '@/components/ui/separator';
 
+// Archetype icons/emojis for visual distinction
+const archetypeEmoji: Record<string, string> = {
+    'The Rant': '🔥',
+    'The Analyst': '📊',
+    'The Storyteller': '📖',
+    'The Contrarian': '🎭',
+    'The Coach': '💪',
+    'The Common Trap': '⚠️',
+    'The Industry Secret': '🔐',
+    'The Next Level': '🚀',
+    'The Origin Story': '🌱',
+    'The Comparison': '⚖️',
+};
+
 interface ResultCardProps {
     hooks: string[];
     body: string;
-    label?: string;
-    sublabel?: string;
+    angleType?: string;       // For same-topic: The archetype
+    pivotType?: string;       // For adjacent: The pivot strategy
+    label?: string;           // retention_tactic or pivot_topic
+    sublabel?: string;        // structure_preserved
     variant: 'double-down' | 'experiment';
     index: number;
 }
 
-export function ResultCard({ hooks, body, label, sublabel, variant, index }: ResultCardProps) {
+export function ResultCard({ hooks, body, angleType, pivotType, label, sublabel, variant, index }: ResultCardProps) {
     const [copied, setCopied] = useState(false);
     const [selectedHook, setSelectedHook] = useState(0);
 
     const handleCopy = async () => {
-        // Copy the selected hook + the body
         const fullScript = `${hooks[selectedHook]}\n\n${body}`;
         await navigator.clipboard.writeText(fullScript);
         setCopied(true);
@@ -34,12 +49,14 @@ export function ResultCard({ hooks, body, label, sublabel, variant, index }: Res
     };
 
     const isDoubleDown = variant === 'double-down';
+    const typeLabel = angleType || pivotType;
+    const emoji = typeLabel ? archetypeEmoji[typeLabel] || '✨' : '✨';
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.1, duration: 0.3 }}
+            transition={{ delay: index * 0.08, duration: 0.3 }}
         >
             <Card
                 className={`relative group transition-all duration-300 hover:shadow-lg overflow-hidden ${isDoubleDown
@@ -48,22 +65,35 @@ export function ResultCard({ hooks, body, label, sublabel, variant, index }: Res
                     }`}
             >
                 <CardContent className="pt-5 pb-4">
-                    {/* Header Tags */}
-                    {label && (
-                        <div className="mb-4 flex flex-wrap items-center gap-2">
-                            <Badge
-                                variant="secondary"
-                                className={`text-xs font-semibold ${isDoubleDown
-                                        ? 'bg-blue-500/10 text-blue-700 dark:text-blue-300'
-                                        : 'bg-purple-500/10 text-purple-700 dark:text-purple-300'
-                                    }`}
-                            >
-                                {label}
-                            </Badge>
+                    {/* Archetype/Pivot Type Header */}
+                    {typeLabel && (
+                        <div className="mb-4">
+                            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${isDoubleDown
+                                    ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300'
+                                    : 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
+                                }`}>
+                                <span className="text-base">{emoji}</span>
+                                {typeLabel}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Strategy/Topic Info */}
+                    {(label || sublabel) && (
+                        <div className="mb-4 text-xs text-muted-foreground space-y-1">
+                            {label && (
+                                <p className="leading-relaxed">
+                                    <span className="font-medium text-foreground/80">
+                                        {isDoubleDown ? '💡 Retention: ' : '🎯 Topic: '}
+                                    </span>
+                                    {label}
+                                </p>
+                            )}
                             {sublabel && (
-                                <span className="text-xs text-muted-foreground/80 font-medium">
-                                    • {sublabel}
-                                </span>
+                                <p className="leading-relaxed">
+                                    <span className="font-medium text-foreground/80">🔗 Structure: </span>
+                                    {sublabel}
+                                </p>
                             )}
                         </div>
                     )}

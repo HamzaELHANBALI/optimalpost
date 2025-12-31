@@ -310,7 +310,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">Same Topic</h3>
-                      <p className="text-xs text-muted-foreground">3 hooks per variation for A/B testing</p>
+                      <p className="text-xs text-muted-foreground">5 archetypes: Rant, Analyst, Storyteller, Contrarian, Coach</p>
                     </div>
                   </div>
                   <div className="space-y-3">
@@ -319,6 +319,7 @@ export default function Home() {
                         key={index}
                         hooks={item.hooks}
                         body={item.script_body}
+                        angleType={item.angle_type}
                         label={item.retention_tactic}
                         variant="double-down"
                         index={index}
@@ -335,7 +336,7 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">Adjacent Topics</h3>
-                      <p className="text-xs text-muted-foreground">Same audience, different subjects</p>
+                      <p className="text-xs text-muted-foreground">5 pivots: Trap, Secret, Next Level, Origin, Comparison</p>
                     </div>
                   </div>
                   <div className="space-y-3">
@@ -344,6 +345,7 @@ export default function Home() {
                         key={index}
                         hooks={item.hooks}
                         body={item.script_body}
+                        pivotType={item.pivot_type}
                         label={item.pivot_topic}
                         sublabel={item.structure_preserved}
                         variant="experiment"

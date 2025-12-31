@@ -10,14 +10,16 @@ export interface ContentAnalysis {
 }
 
 export interface SameTopicVariation {
-    hooks: string[]; // Array of 3 options
-    script_body: string; // The main content (teleprompter format)
-    retention_tactic: string; // Explanation of the strategy
+    angle_type: string;       // The archetype: Rant, Analyst, Storyteller, Contrarian, Coach
+    hooks: string[];          // 3 distinct hook options
+    script_body: string;      // Teleprompter-formatted body
+    retention_tactic: string; // Strategy explanation
 }
 
 export interface AdjacentTopicVariation {
-    hooks: string[]; // Array of 3 options
-    script_body: string;
+    pivot_type: string;       // The pivot: Trap, Secret, Next Level, Origin Story, Comparison
+    hooks: string[];          // 3 distinct hook options
+    script_body: string;      // Teleprompter-formatted body
     pivot_topic: string;
     structure_preserved: string;
 }
