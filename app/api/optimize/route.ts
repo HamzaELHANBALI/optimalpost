@@ -3,93 +3,65 @@ import { generateObject } from 'ai';
 import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 
-// Schema for the AI response with detailed analysis
+// Updated Schema for "Hook Separation" and "Deep Analysis"
 const analysisSchema = z.object({
     analysis: z.object({
-        hook: z.string().describe('What hook was used to grab attention in the first 1-3 seconds? Be specific.'),
-        structure: z.string().describe('Break down the script structure: Opening → Build-up → Payoff. What pattern does it follow?'),
-        retention_mechanics: z.string().describe('What psychological triggers keep viewers watching? (curiosity gaps, open loops, pattern interrupts, etc.)'),
-        niche_and_audience: z.string().describe('What niche is this content in? Who is the target audience? (e.g., "Software engineering - targeting junior developers and CS students")'),
-        topic_angle: z.string().describe('What is the specific topic and the unique angle/perspective taken?'),
-        emotional_driver: z.string().describe('What emotion does this content trigger? (fear, curiosity, aspiration, controversy, etc.)'),
-    }).describe('Detailed breakdown of why this content worked'),
+        hook_mechanic: z.string().describe('The specific psychological trigger used in the hook (e.g., "Negative Framing", "Curiosity Gap")'),
+        pacing_score: z.string().describe('Fast, Slow, or Conversational?'),
+        emotional_payoff: z.string().describe('What does the viewer feel at the end? (e.g., Validated, Angry, Smarter)'),
+    }),
 
     same_topic_variations: z.array(z.object({
-        content: z.string().describe('The full script variation'),
-        hook_used: z.string().describe('Brief description of the hook approach'),
-    })).length(3).describe('3 scripts using the SAME topic but with different hooks/angles. These are for recreating the video with fresh takes.'),
+        hooks: z.array(z.string()).length(3).describe('3 distinct hook options (e.g., 1. Statement, 2. Question, 3. Negative)'),
+        script_body: z.string().describe('The main content formatted as short, punchy teleprompter lines. Do NOT include the hook here.'),
+        why_it_works: z.string().describe('One sentence on why this structure retains attention.'),
+    })).length(3),
 
     adjacent_topic_variations: z.array(z.object({
-        content: z.string().describe('The full script variation'),
-        pivot_topic: z.string().describe('What adjacent topic within the same niche this explores'),
-        structure_preserved: z.string().describe('What structural elements were kept from the original'),
-    })).length(3).describe('3 scripts pivoting to ADJACENT topics within the SAME NICHE. Example: if original is about "dev tools", pivot to "soft skills for devs" or "career tips for engineers" - same audience, different subject.'),
+        target_audience: z.string().describe('Who is this specific variation for?'),
+        hooks: z.array(z.string()).length(3).describe('3 distinct hook options tailored to the new topic'),
+        script_body: z.string().describe('The main content formatted as short teleprompter lines.'),
+    })).length(3),
 });
 
-const systemPrompt = `You are a viral content analyst and scriptwriter for short-form video (TikTok, Reels, Shorts).
+const systemPrompt = `You are a viral TikTok script doctor. You do not write "content"; you engineer attention.
 
-Your job is to:
-1. DEEPLY ANALYZE why a piece of content performed well
-2. CREATE NEW SCRIPTS that replicate or expand on its success
+YOUR GOAL: 
+Take a winning script and scientifically reconstruct it to guarantee retention.
 
-## Analysis Framework
-When analyzing content, identify:
-- **THE HOOK**: How does it grab attention instantly? (Question? Bold claim? Pattern interrupt? Visual cue reference?)
-- **THE STRUCTURE**: What's the narrative arc? (Problem→Solution, Myth→Truth, Story→Lesson, List format, etc.)
-- **RETENTION MECHANICS**: What keeps people watching? (Curiosity gaps, "wait for it", escalation, open loops)
-- **NICHE & AUDIENCE**: Who is this content for? What community/industry does it serve?
-- **EMOTIONAL TRIGGERS**: What feelings does it evoke? (FOMO, controversy, aspiration, relatability, shock)
+### 1. THE "ANTI-ROBOT" RULES (Strict Adherence):
+- **Write for the EAR:** Use contractions ("can't", "won't", "it's").
+- **Grade 4 Readability:** Use simple, punchy words. No "delve", "leverage", "moreover".
+- **Sentence Fragments:** It is okay to break grammar rules. Like this.
+- **Rhythm:** Alternating length. Short sentence. Short sentence. Slightly longer sentence to explain the context.
 
-## Script Generation Rules
+### 2. TELEPROMPTER FORMATTING:
+- The 'script_body' MUST be formatted for a teleprompter.
+- Break text into short lines (3-7 words max per line).
+- Use '...' to indicate natural pauses.
+- NO PARAGRAPHS.
 
-For "Same Topic Variations" (Recreating the video):
-- Keep the EXACT same topic and core message
-- Change the hook approach (if original used a question, try a bold statement)
-- Maintain the same structure and pacing
-- Refresh examples and specific details
-- These should feel like "takes 2, 3, 4" of the same video
+### 3. THE HOOK STRATEGY:
+- For every script, generate 3 different types of hooks:
+  1. **The Negative/Warning:** "Stop doing X..."
+  2. **The Result-First:** "Here is how I got Y..."
+  3. **The Curiosity Gap:** "Most people ignore this, but..."
 
-For "Adjacent Topic Variations" (Pivoting within the niche):
-- STAY WITHIN THE SAME NICHE - same target audience
-- PRESERVE the winning structure and hook pattern
-- PIVOT to a RELATED but DIFFERENT subject that the same audience cares about
-- Example: If original is "tools every software engineer needs", adjacent topics could be:
-  - "Soft skills that get developers promoted"
-  - "Mistakes junior developers make"
-  - "How to prepare for tech interviews"
-  - "Side projects that impress recruiters"
-- NOT a completely different niche (don't go from coding to cooking)
-- These should feel like "what else would my audience want to learn?"
-
-Match the original's length, tone, and energy level precisely.`;
+Analyze the user's input, strip away the fluff, and rebuild it using these principles.`;
 
 export async function POST(request: NextRequest) {
     try {
         const { content, inputType } = await request.json();
 
         if (!content || content.trim().length === 0) {
-            return NextResponse.json(
-                { error: 'Content is required' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Content is required' }, { status: 400 });
         }
 
-        if (!process.env.OPENAI_API_KEY) {
-            return NextResponse.json(
-                { error: 'OpenAI API key is not configured' },
-                { status: 500 }
-            );
-        }
-
-        const userPrompt = `Analyze this ${inputType === 'voiceover' ? 'voiceover script' : 'text overlay'} from a viral video and generate variations:
-
-"""
-${content}
-"""
-
-Provide a deep analysis of why this worked, then generate:
-1. Three variations on the SAME topic (for recreating the video)
-2. Three variations applying this formula to NEW topics (for branching out)`;
+        const userPrompt = `Analyze this ${inputType} and generate viral variations based on its winning structure:
+        
+        INPUT:
+        "${content}"
+        `;
 
         const result = await generateObject({
             model: openai('gpt-4o'),

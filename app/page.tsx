@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Repeat, Sparkles, History, Beaker, Loader2, AlertCircle, Zap, Brain, Heart, Target, Layers, Users } from 'lucide-react';
+import { Repeat, Sparkles, History, Beaker, Loader2, AlertCircle, Zap, Brain, Heart, Target, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,9 +17,9 @@ import { AnalysisResult } from '@/lib/types';
 const loadingMessages = [
   'Analyzing hook patterns...',
   'Breaking down structure...',
-  'Identifying your niche...',
-  'Finding adjacent topics...',
-  'Generating variations...',
+  'Engineering attention...',
+  'Generating hook variations...',
+  'Formatting for teleprompter...',
 ];
 
 export default function Home() {
@@ -219,7 +219,7 @@ export default function Home() {
               transition={{ duration: 0.5 }}
               className="space-y-6"
             >
-              {/* Analysis Breakdown */}
+              {/* Analysis Breakdown - Updated for new schema */}
               <Card className="border-2 border-yellow-500/30 bg-gradient-to-br from-yellow-500/5 via-orange-500/5 to-transparent">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-lg flex items-center gap-2">
@@ -228,59 +228,38 @@ export default function Home() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    {/* Hook */}
+                  <div className="grid sm:grid-cols-3 gap-4">
+                    {/* Hook Mechanic */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Zap className="h-4 w-4 text-blue-500" />
-                        <span className="text-sm font-medium">The Hook</span>
+                        <span className="text-sm font-medium">Hook Mechanic</span>
                       </div>
-                      <p className="text-sm text-muted-foreground pl-6">{result.analysis.hook}</p>
+                      <p className="text-sm text-muted-foreground pl-6">
+                        {result.analysis.hook_mechanic || result.analysis.hook || 'N/A'}
+                      </p>
                     </div>
 
-                    {/* Structure */}
+                    {/* Pacing */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
-                        <Layers className="h-4 w-4 text-green-500" />
-                        <span className="text-sm font-medium">Structure</span>
+                        <Target className="h-4 w-4 text-green-500" />
+                        <span className="text-sm font-medium">Pacing</span>
                       </div>
-                      <p className="text-sm text-muted-foreground pl-6">{result.analysis.structure}</p>
+                      <p className="text-sm text-muted-foreground pl-6">
+                        {result.analysis.pacing_score || result.analysis.structure || 'N/A'}
+                      </p>
                     </div>
 
-                    {/* Niche & Audience */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4 text-cyan-500" />
-                        <span className="text-sm font-medium">Niche & Audience</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground pl-6">{result.analysis.niche_and_audience}</p>
-                    </div>
-
-                    {/* Retention */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Target className="h-4 w-4 text-purple-500" />
-                        <span className="text-sm font-medium">Retention Mechanics</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground pl-6">{result.analysis.retention_mechanics}</p>
-                    </div>
-
-                    {/* Emotional Driver */}
+                    {/* Emotional Payoff */}
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Heart className="h-4 w-4 text-red-500" />
-                        <span className="text-sm font-medium">Emotional Driver</span>
+                        <span className="text-sm font-medium">Emotional Payoff</span>
                       </div>
-                      <p className="text-sm text-muted-foreground pl-6">{result.analysis.emotional_driver}</p>
-                    </div>
-
-                    {/* Topic Angle */}
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Sparkles className="h-4 w-4 text-orange-500" />
-                        <span className="text-sm font-medium">Topic & Angle</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground pl-6">{result.analysis.topic_angle}</p>
+                      <p className="text-sm text-muted-foreground pl-6">
+                        {result.analysis.emotional_payoff || result.analysis.emotional_driver || 'N/A'}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -298,15 +277,17 @@ export default function Home() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">Same Topic</h3>
-                      <p className="text-xs text-muted-foreground">Recreate the video with fresh hooks</p>
+                      <p className="text-xs text-muted-foreground">3 hooks per variation for A/B testing</p>
                     </div>
                   </div>
                   <div className="space-y-3">
                     {result.same_topic_variations.map((item, index) => (
                       <ResultCard
                         key={index}
+                        hooks={item.hooks}
+                        scriptBody={item.script_body}
                         content={item.content}
-                        label={item.hook_used}
+                        label={item.why_it_works || item.hook_used}
                         variant="double-down"
                         index={index}
                       />
@@ -318,20 +299,21 @@ export default function Home() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-2">
                     <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20">
-                      <Sparkles className="h-5 w-5 text-purple-500" />
+                      <Users className="h-5 w-5 text-purple-500" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">Adjacent Topics</h3>
-                      <p className="text-xs text-muted-foreground">Same niche, different subjects</p>
+                      <p className="text-xs text-muted-foreground">Same audience, different subjects</p>
                     </div>
                   </div>
                   <div className="space-y-3">
                     {result.adjacent_topic_variations.map((item, index) => (
                       <ResultCard
                         key={index}
+                        hooks={item.hooks}
+                        scriptBody={item.script_body}
                         content={item.content}
-                        label={item.pivot_topic}
-                        sublabel={item.structure_preserved}
+                        label={item.target_audience || item.pivot_topic}
                         variant="experiment"
                         index={index}
                       />
