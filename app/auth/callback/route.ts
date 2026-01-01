@@ -37,13 +37,35 @@ export async function GET(request: NextRequest) {
       }
     } else {
       // For other OTP types (recovery, magiclink, etc.)
-      const { error } = await supabase.auth.verifyOtp({
-        type: type as 'recovery' | 'magiclink' | 'invite' | 'email_change',
-        ...(token_hash ? { token_hash } : { token: token! }),
-        ...(email ? { email } : {}),
-      });
-      if (!error) {
-        return NextResponse.redirect(new URL(next, request.url));
+      // Build the params object based on what we have
+      const otpType = type as 'recovery' | 'magiclink' | 'invite' | 'email_change';
+      
+      if (token_hash) {
+        // Use token_hash (email is optional for these types)
+        const params: any = {
+          type: otpType,
+          token_hash,
+        };
+        if (email) {
+          params.email = email;
+        }
+        const { error } = await supabase.auth.verifyOtp(params);
+        if (!error) {
+          return NextResponse.redirect(new URL(next, request.url));
+        }
+      } else if (token) {
+        // Use token (email might be required for some types)
+        const params: any = {
+          type: otpType,
+          token,
+        };
+        if (email) {
+          params.email = email;
+        }
+        const { error } = await supabase.auth.verifyOtp(params);
+        if (!error) {
+          return NextResponse.redirect(new URL(next, request.url));
+        }
       }
     }
   }
