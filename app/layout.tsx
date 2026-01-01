@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OptimalPost - Content Optimization Lab",
+  title: "ProvenPost - Content Optimization Lab",
   description: "Analyze viral content and generate high-performing variations. Double down on what works and experiment with new angles.",
   keywords: ["content optimization", "viral content", "content analysis", "AI writing"],
 };

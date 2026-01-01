@@ -114,7 +114,7 @@ export default function Home() {
               <Sparkles className="h-3 w-3 text-purple-500 absolute -top-1 -right-1" />
             </div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-              OptimalPost
+              ProvenPost
             </h1>
             <span className="text-xs text-muted-foreground hidden sm:inline-block px-2 py-0.5 rounded-full bg-muted">
               Content Lab

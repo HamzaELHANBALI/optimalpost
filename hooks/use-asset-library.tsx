@@ -18,7 +18,7 @@ interface AssetLibraryContextType {
 
 const AssetLibraryContext = createContext<AssetLibraryContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'optimalpost-sessions';
+const STORAGE_KEY = 'provenpost-sessions';
 
 // Helper to convert Supabase row to Session
 function rowToSession(row: any): Session {
@@ -57,7 +57,7 @@ export function AssetLibraryProvider({ children }: { children: ReactNode }) {
     useEffect(() => {
         const loadSessions = async () => {
             setLoading(true);
-            
+
             if (user) {
                 // Load from Supabase
                 try {
@@ -81,7 +81,7 @@ export function AssetLibraryProvider({ children }: { children: ReactNode }) {
                 // Load from localStorage when not authenticated
                 loadFromLocalStorage();
             }
-            
+
             setLoading(false);
         };
 
@@ -217,7 +217,7 @@ export function AssetLibraryProvider({ children }: { children: ReactNode }) {
 
         try {
             const localSessions: Session[] = JSON.parse(stored);
-            
+
             // Check if there are any sessions to migrate
             if (localSessions.length === 0) return;
 

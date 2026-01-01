@@ -20,7 +20,7 @@ export function MigrationPrompt() {
 
   useEffect(() => {
     if (user && typeof window !== 'undefined') {
-      const hasLocalData = localStorage.getItem('optimalpost-sessions');
+      const hasLocalData = localStorage.getItem('provenpost-sessions');
       if (hasLocalData) {
         try {
           const sessions = JSON.parse(hasLocalData);
