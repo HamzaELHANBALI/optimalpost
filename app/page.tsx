@@ -35,28 +35,6 @@ export default function Home() {
 
   const { addSession, currentSession, clearCurrentSession } = useAssetLibrary();
 
-  // Handle auth codes that might land on the home page
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const code = params.get('code');
-      const token_hash = params.get('token_hash');
-      const token = params.get('token');
-      const type = params.get('type');
-
-      // If we have auth-related parameters, redirect to callback immediately
-      if (code || token_hash || (token && type)) {
-        const callbackUrl = new URL('/auth/callback', window.location.origin);
-        params.forEach((value, key) => {
-          callbackUrl.searchParams.set(key, value);
-        });
-        // Use replace to avoid adding to browser history
-        window.location.replace(callbackUrl.toString());
-        return;
-      }
-    }
-  }, []);
-
   // Load current session data when it changes
   useEffect(() => {
     if (currentSession) {
