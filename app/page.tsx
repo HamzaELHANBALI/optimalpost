@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Repeat, Sparkles, History, Beaker, Loader2, AlertCircle, Zap, Brain, Heart, Target, Users, Layers } from 'lucide-react';
+import { Repeat, Sparkles, History, Loader2, AlertCircle, Zap, Brain, Heart, Target, Users, Layers } from 'lucide-react';
+import { ProvenPostLogo } from '@/components/logo';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -109,14 +110,8 @@ export default function Home() {
       <header className="sticky top-0 z-50 border-b bg-background/80 backdrop-blur-lg">
         <div className="max-w-5xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="relative">
-              <Beaker className="h-7 w-7 text-primary" />
-              <Sparkles className="h-3 w-3 text-purple-500 absolute -top-1 -right-1" />
-            </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
-              ProvenPost
-            </h1>
-            <span className="text-xs text-muted-foreground hidden sm:inline-block px-2 py-0.5 rounded-full bg-muted">
+            <ProvenPostLogo />
+            <span className="text-xs text-muted-foreground hidden sm:inline-block px-2 py-0.5 rounded-full bg-muted border">
               Content Lab
             </span>
           </div>
