@@ -26,10 +26,16 @@ export async function GET(request: NextRequest) {
             return cookieStore.getAll();
           },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-              response.cookies.set(name, value, options);
-            });
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                cookieStore.set(name, value, options);
+                response.cookies.set(name, value, options);
+              });
+            } catch (error) {
+              // The `setAll` method was called from a Route Handler.
+              // This can be ignored if you have middleware refreshing
+              // user sessions.
+            }
           },
         },
       }
@@ -38,6 +44,7 @@ export async function GET(request: NextRequest) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (error) {
+      console.error('Auth callback error:', error);
       return NextResponse.redirect(new URL(`/?error=${encodeURIComponent(error.message)}`, request.url));
     }
 
