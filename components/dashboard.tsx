@@ -1,16 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Repeat, Sparkles, History, Loader2, AlertCircle, Zap, Brain, Heart, Target, Users, Layers } from 'lucide-react';
+import { Repeat, Sparkles, History, Loader2, AlertCircle, Zap, Brain, Heart, Target, Users, Layers, FileAudio, PenLine, ArrowRight, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResultCard } from '@/components/result-card';
 import { HistorySidebar } from '@/components/history-sidebar';
 import { MigrationPrompt } from '@/components/auth/migration-prompt';
+import { FileUpload } from '@/components/file-upload';
 import { useAssetLibrary } from '@/hooks/use-asset-library';
 import { AnalysisResult } from '@/lib/types';
 
@@ -33,6 +35,9 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
   const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [inputMode, setInputMode] = useState<'script' | 'upload'>('script');
+  const [transcript, setTranscript] = useState<string | null>(null);
+  const [isEditingTranscript, setIsEditingTranscript] = useState(false);
 
   const { addSession, currentSession, clearCurrentSession } = useAssetLibrary();
 
@@ -100,7 +105,23 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
     setContent('');
     setResult(null);
     setError(null);
+    setTranscript(null);
+    setIsEditingTranscript(false);
+    setInputMode('script');
     clearCurrentSession();
+  };
+
+  const handleTranscriptReady = (transcriptText: string) => {
+    setTranscript(transcriptText);
+    setIsEditingTranscript(false);
+  };
+
+  const handleUseTranscript = () => {
+    if (transcript) {
+      setContent(transcript);
+      setInputMode('script');
+      setTranscript(null);
+    }
   };
 
   return (
@@ -134,32 +155,98 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Textarea
-                placeholder="Paste the script from your viral video here..."
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                className="min-h-[180px] text-base resize-none"
-                disabled={isLoading}
-              />
+              {/* Transcript Preview (shown after file upload) */}
+              {transcript && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <FileAudio className="h-4 w-4 text-green-500" />
+                      <span className="text-sm font-medium">Transcription Result</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setIsEditingTranscript(!isEditingTranscript)}
+                    >
+                      <Edit3 className="h-4 w-4 mr-1" />
+                      {isEditingTranscript ? 'Done Editing' : 'Edit'}
+                    </Button>
+                  </div>
+                  <Textarea
+                    value={transcript}
+                    onChange={(e) => setTranscript(e.target.value)}
+                    className="min-h-[150px] text-base resize-none"
+                    disabled={!isEditingTranscript}
+                  />
+                  <Button
+                    size="lg"
+                    className="w-full text-base font-semibold h-12"
+                    onClick={handleUseTranscript}
+                  >
+                    Use This Script
+                    <ArrowRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </motion.div>
+              )}
 
-              <Button
-                size="lg"
-                className="w-full text-base font-semibold h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300"
-                onClick={handleAnalyze}
-                disabled={isLoading || !content.trim()}
-              >
-                {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                    {loadingMessage}
-                  </span>
-                ) : (
-                  <>
-                    <Brain className="h-5 w-5 mr-2" />
-                    Analyze & Generate Variations
-                  </>
-                )}
-              </Button>
+              {/* Input Tabs (hidden when transcript is shown) */}
+              {!transcript && (
+                <Tabs value={inputMode} onValueChange={(v) => setInputMode(v as 'script' | 'upload')}>
+                  <TabsList className="grid w-full grid-cols-2 mb-4">
+                    <TabsTrigger value="script" className="flex items-center gap-2">
+                      <PenLine className="h-4 w-4" />
+                      Paste Script
+                    </TabsTrigger>
+                    <TabsTrigger value="upload" className="flex items-center gap-2">
+                      <FileAudio className="h-4 w-4" />
+                      Upload Audio/Video
+                    </TabsTrigger>
+                  </TabsList>
+
+                  <TabsContent value="script" className="space-y-4">
+                    <Textarea
+                      placeholder="Paste the script from your viral video here..."
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      className="min-h-[180px] text-base resize-none"
+                      disabled={isLoading}
+                    />
+
+                    <Button
+                      size="lg"
+                      className="w-full text-base font-semibold h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300"
+                      onClick={handleAnalyze}
+                      disabled={isLoading || !content.trim()}
+                    >
+                      {isLoading ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="h-5 w-5 animate-spin" />
+                          {loadingMessage}
+                        </span>
+                      ) : (
+                        <>
+                          <Brain className="h-5 w-5 mr-2" />
+                          Analyze & Generate Variations
+                        </>
+                      )}
+                    </Button>
+                  </TabsContent>
+
+                  <TabsContent value="upload" className="space-y-4">
+                    <FileUpload
+                      onTranscriptReady={handleTranscriptReady}
+                      disabled={isLoading}
+                    />
+                    <p className="text-xs text-muted-foreground text-center">
+                      Upload your video and we&apos;ll extract the script using AI transcription
+                    </p>
+                  </TabsContent>
+                </Tabs>
+              )}
             </CardContent>
           </Card>
         </motion.div>
