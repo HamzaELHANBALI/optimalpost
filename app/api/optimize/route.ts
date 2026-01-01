@@ -79,7 +79,7 @@ Extract the viral DNA and reconstruct it into high-retention cuts.`;
 
 export async function POST(request: NextRequest) {
     try {
-        const { content, inputType } = await request.json();
+        const { content, inputType = 'voiceover' } = await request.json();
 
         if (!content || content.trim().length === 0) {
             return NextResponse.json({ error: 'Content is required' }, { status: 400 });
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
         }
 
-        const userPrompt = `Analyze this ${inputType} and generate viral variations with distinct visual cuts:
+        const userPrompt = `Analyze this script and generate viral variations with distinct visual cuts:
         
         INPUT CONTENT:
         """

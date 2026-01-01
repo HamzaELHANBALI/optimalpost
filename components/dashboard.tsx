@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { ResultCard } from '@/components/result-card';
@@ -30,7 +29,6 @@ interface DashboardProps {
 
 export function Dashboard({ historyOpen = false, onHistoryOpenChange }: DashboardProps) {
   const [content, setContent] = useState('');
-  const [inputType, setInputType] = useState<'voiceover' | 'text-overlay'>('voiceover');
   const [isLoading, setIsLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -42,7 +40,6 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
   useEffect(() => {
     if (currentSession) {
       setContent(currentSession.originalInput);
-      setInputType(currentSession.inputType);
       setResult({
         analysis: currentSession.analysis,
         same_topic_variations: currentSession.sameTopicVariations,
@@ -73,7 +70,7 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
       const response = await fetch('/api/optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, inputType }),
+        body: JSON.stringify({ content, inputType: 'voiceover' }),
       });
 
       if (!response.ok) {
@@ -87,7 +84,7 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
       // Save to history
       await addSession({
         originalInput: content,
-        inputType,
+        inputType: 'voiceover',
         analysis: data.analysis,
         sameTopicVariations: data.same_topic_variations,
         adjacentTopicVariations: data.adjacent_topic_variations,
@@ -137,13 +134,6 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Tabs value={inputType} onValueChange={(v) => setInputType(v as 'voiceover' | 'text-overlay')}>
-                <TabsList className="grid w-full max-w-md grid-cols-2">
-                  <TabsTrigger value="voiceover">Voiceover Script</TabsTrigger>
-                  <TabsTrigger value="text-overlay">Text Overlay</TabsTrigger>
-                </TabsList>
-              </Tabs>
-
               <Textarea
                 placeholder="Paste the script from your viral video here..."
                 value={content}
