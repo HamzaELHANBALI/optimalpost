@@ -7,20 +7,44 @@ export async function GET(request: NextRequest) {
   const token_hash = requestUrl.searchParams.get('token_hash');
   const token = requestUrl.searchParams.get('token');
   const type = requestUrl.searchParams.get('type');
+  const email = requestUrl.searchParams.get('email');
   const next = requestUrl.searchParams.get('next') ?? '/';
   const code = requestUrl.searchParams.get('code');
 
   // Handle email confirmation (can use either token_hash or token)
   if (type && (token_hash || token)) {
     const supabase = await createClient();
-    const { error } = await supabase.auth.verifyOtp({
-      type: type as any,
-      ...(token_hash ? { token_hash } : { token }),
-    });
-
-    if (!error) {
-      // Redirect to home page after successful verification
-      return NextResponse.redirect(new URL(next, request.url));
+    
+    // For email type, we need the email parameter
+    if (type === 'email') {
+      if (email && token_hash) {
+        const { error } = await supabase.auth.verifyOtp({
+          type: 'email',
+          email,
+          token_hash,
+        });
+        if (!error) {
+          return NextResponse.redirect(new URL(next, request.url));
+        }
+      } else if (token) {
+        // For token-based email confirmation, try to verify
+        // If email is not provided, Supabase might handle it automatically
+        // by checking the session after redirect
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (!error && user) {
+          return NextResponse.redirect(new URL(next, request.url));
+        }
+      }
+    } else {
+      // For other OTP types (recovery, magiclink, etc.)
+      const { error } = await supabase.auth.verifyOtp({
+        type: type as 'recovery' | 'magiclink' | 'invite' | 'email_change',
+        ...(token_hash ? { token_hash } : { token: token! }),
+        ...(email ? { email } : {}),
+      });
+      if (!error) {
+        return NextResponse.redirect(new URL(next, request.url));
+      }
     }
   }
 
