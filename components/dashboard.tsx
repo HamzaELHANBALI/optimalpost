@@ -38,6 +38,7 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
   const [inputMode, setInputMode] = useState<'script' | 'upload'>('script');
   const [transcript, setTranscript] = useState<string | null>(null);
   const [isEditingTranscript, setIsEditingTranscript] = useState(false);
+  const [isFromTranscription, setIsFromTranscription] = useState(false);
 
   const { addSession, currentSession, clearCurrentSession } = useAssetLibrary();
 
@@ -75,7 +76,7 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
       const response = await fetch('/api/optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content, inputType: 'voiceover' }),
+        body: JSON.stringify({ content, inputType: 'script' }),
       });
 
       if (!response.ok) {
@@ -89,7 +90,7 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
       // Save to history
       await addSession({
         originalInput: content,
-        inputType: 'voiceover',
+        inputType: isFromTranscription ? 'transcribed' : 'script',
         analysis: data.analysis,
         sameTopicVariations: data.same_topic_variations,
         adjacentTopicVariations: data.adjacent_topic_variations,
@@ -108,6 +109,7 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
     setTranscript(null);
     setIsEditingTranscript(false);
     setInputMode('script');
+    setIsFromTranscription(false);
     clearCurrentSession();
   };
 
@@ -121,6 +123,7 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
       setContent(transcript);
       setInputMode('script');
       setTranscript(null);
+      setIsFromTranscription(true);
     }
   };
 

@@ -87,7 +87,7 @@ export function HistorySidebar({ open, onOpenChange }: HistorySidebarProps) {
                                                         {formatDistanceToNow(session.timestamp, { addSuffix: true })}
                                                     </span>
                                                     <span className="text-xs px-1.5 py-0.5 rounded bg-muted">
-                                                        {session.inputType === 'voiceover' ? 'Voiceover' : 'Text Overlay'}
+                                                        {session.inputType === 'transcribed' ? 'Transcribed' : 'Script'}
                                                     </span>
                                                 </div>
                                                 <p className="text-xs text-muted-foreground mt-2 line-clamp-2">

@@ -38,7 +38,7 @@ export interface Session {
     id: string;
     timestamp: number;
     originalInput: string;
-    inputType: 'voiceover' | 'text-overlay';
+    inputType: 'script' | 'transcribed';
     analysis: ContentAnalysis;
     sameTopicVariations: SameTopicVariation[];
     adjacentTopicVariations: AdjacentTopicVariation[];
@@ -46,5 +46,5 @@ export interface Session {
 
 export interface OptimizeRequest {
     content: string;
-    inputType: 'voiceover' | 'text-overlay';
+    inputType: 'script' | 'transcribed';
 }
