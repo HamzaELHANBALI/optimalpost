@@ -13,6 +13,8 @@ import { ResultCard } from '@/components/result-card';
 import { HistorySidebar } from '@/components/history-sidebar';
 import { useAssetLibrary } from '@/hooks/use-asset-library';
 import { AnalysisResult } from '@/lib/types';
+import { AuthButton } from '@/components/auth/auth-button';
+import { MigrationPrompt } from '@/components/auth/migration-prompt';
 
 const loadingMessages = [
   'Analyzing hook patterns...',
@@ -80,7 +82,7 @@ export default function Home() {
       setResult(data);
 
       // Save to history
-      addSession({
+      await addSession({
         originalInput: content,
         inputType,
         analysis: data.analysis,
@@ -118,19 +120,25 @@ export default function Home() {
               Content Lab
             </span>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setHistoryOpen(true)}
-            className="gap-2"
-          >
-            <History className="h-4 w-4" />
-            <span className="hidden sm:inline">History</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setHistoryOpen(true)}
+              className="gap-2"
+            >
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">History</span>
+            </Button>
+            <AuthButton />
+          </div>
         </div>
       </header>
 
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        {/* Migration Prompt */}
+        <MigrationPrompt />
+
         {/* Input Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}

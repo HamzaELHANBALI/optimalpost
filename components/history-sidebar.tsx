@@ -21,7 +21,7 @@ interface HistorySidebarProps {
 }
 
 export function HistorySidebar({ open, onOpenChange }: HistorySidebarProps) {
-    const { sessions, loadSession, deleteSession } = useAssetLibrary();
+    const { sessions, loadSession, deleteSession, loading } = useAssetLibrary();
 
     const handleLoadSession = (id: string) => {
         loadSession(id);
@@ -43,7 +43,16 @@ export function HistorySidebar({ open, onOpenChange }: HistorySidebarProps) {
                 <Separator className="my-4" />
                 <ScrollArea className="h-[calc(100vh-180px)] pr-4">
                     <AnimatePresence mode="popLayout">
-                        {sessions.length === 0 ? (
+                        {loading ? (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground"
+                            >
+                                <FileText className="h-12 w-12 mb-4 opacity-50 animate-pulse" />
+                                <p className="text-sm">Loading sessions...</p>
+                            </motion.div>
+                        ) : sessions.length === 0 ? (
                             <motion.div
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -89,9 +98,9 @@ export function HistorySidebar({ open, onOpenChange }: HistorySidebarProps) {
                                                 variant="ghost"
                                                 size="icon"
                                                 className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10"
-                                                onClick={(e) => {
+                                                onClick={async (e) => {
                                                     e.stopPropagation();
-                                                    deleteSession(session.id);
+                                                    await deleteSession(session.id);
                                                 }}
                                             >
                                                 <Trash2 className="h-4 w-4" />
