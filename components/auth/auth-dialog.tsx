@@ -10,82 +10,43 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 
 interface AuthDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  defaultMode?: 'signin' | 'signup';
 }
 
-export function AuthDialog({ open, onOpenChange, defaultMode = 'signin' }: AuthDialogProps) {
-  const [mode, setMode] = useState<'signin' | 'signup'>(defaultMode);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export function AuthDialog({ open, onOpenChange }: AuthDialogProps) {
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const { signIn, signUp, signInWithGoogle } = useAuth();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    setLoading(true);
-
-    try {
-      const { error: authError } = mode === 'signin'
-        ? await signIn(email, password)
-        : await signUp(email, password);
-
-      if (authError) {
-        setError(authError.message);
-      } else {
-        onOpenChange(false);
-        setEmail('');
-        setPassword('');
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { signInWithGoogle } = useAuth();
 
   const handleGoogleSignIn = async () => {
     setError(null);
     setGoogleLoading(true);
 
     try {
-      const { error: authError } = await signInWithGoogle();
-      if (authError) {
-        setError(authError.message);
-      } else {
-        // OAuth redirect will happen, so we don't close the dialog here
-        // The dialog will close when the user returns from OAuth
-      }
+      await signInWithGoogle();
+      // OAuth redirect will happen, so we don't close the dialog here
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred');
-    } finally {
       setGoogleLoading(false);
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{mode === 'signin' ? 'Sign In' : 'Sign Up'}</DialogTitle>
-          <DialogDescription>
-            {mode === 'signin'
-              ? 'Sign in to access your session history across devices.'
-              : 'Create an account to save and sync your session history.'}
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader className="space-y-3 pb-4">
+          <DialogTitle className="text-2xl text-center">Welcome to ProvenPost</DialogTitle>
+          <DialogDescription className="text-center">
+            Sign in to access your session history and sync across devices.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 py-2">
           {error && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
@@ -97,8 +58,8 @@ export function AuthDialog({ open, onOpenChange, defaultMode = 'signin' }: AuthD
             type="button"
             variant="outline"
             onClick={handleGoogleSignIn}
-            disabled={loading || googleLoading}
-            className="w-full"
+            disabled={googleLoading}
+            className="w-full h-12 text-base font-medium transition-all group hover:bg-muted/50"
           >
             {googleLoading ? (
               <>
@@ -107,7 +68,7 @@ export function AuthDialog({ open, onOpenChange, defaultMode = 'signin' }: AuthD
               </>
             ) : (
               <>
-                <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 mr-3 transition-transform group-hover:scale-110" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -129,82 +90,12 @@ export function AuthDialog({ open, onOpenChange, defaultMode = 'signin' }: AuthD
               </>
             )}
           </Button>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <Separator />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
-            </div>
-          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              placeholder="you@example.com"
-              disabled={loading}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label htmlFor="password" className="text-sm font-medium">
-              Password
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-              placeholder="••••••••"
-              disabled={loading}
-            />
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  {mode === 'signin' ? 'Signing in...' : 'Signing up...'}
-                </>
-              ) : (
-                mode === 'signin' ? 'Sign In' : 'Sign Up'
-              )}
-            </Button>
-
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => {
-                setMode(mode === 'signin' ? 'signup' : 'signin');
-                setError(null);
-              }}
-              disabled={loading}
-              className="w-full"
-            >
-              {mode === 'signin'
-                ? "Don't have an account? Sign up"
-                : 'Already have an account? Sign in'}
-            </Button>
-          </div>
-        </form>
+        <p className="text-xs text-center text-muted-foreground px-6 mt-2">
+          By signing in, you agree to our Terms of Service and Privacy Policy.
+        </p>
       </DialogContent>
     </Dialog>
   );
 }
-
-

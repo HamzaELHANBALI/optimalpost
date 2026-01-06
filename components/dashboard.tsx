@@ -11,7 +11,6 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResultCard } from '@/components/result-card';
 import { HistorySidebar } from '@/components/history-sidebar';
-import { MigrationPrompt } from '@/components/auth/migration-prompt';
 import { FileUpload } from '@/components/file-upload';
 import { useAssetLibrary } from '@/hooks/use-asset-library';
 import { AnalysisResult } from '@/lib/types';
@@ -130,8 +129,6 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
-        {/* Migration Prompt */}
-        <MigrationPrompt />
         {/* Input Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
