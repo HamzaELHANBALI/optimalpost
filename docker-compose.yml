@@ -1,6 +1,8 @@
 services:
   postgres:
     image: postgres:16-alpine
+    container_name: optimalpost-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_DB: optimalpost
       POSTGRES_USER: optimalpost
@@ -8,13 +10,19 @@ services:
     volumes:
       - optimalpost_pg:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U optimalpost -d optimalpost" ]
+      test: ["CMD-SHELL", "pg_isready -U optimalpost -d optimalpost"]
       interval: 5s
       timeout: 3s
       retries: 20
+    networks:
+      - internal
 
   app:
-    build: .
+    container_name: optimalpost-app
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://optimalpost:${POSTGRES_PASSWORD}@postgres:5432/optimalpost
       NEXTAUTH_URL: ${NEXTAUTH_URL}
@@ -22,11 +30,23 @@ services:
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
       OPENAI_API_KEY: ${OPENAI_API_KEY}
+      AUTH_TRUST_HOST: "true"
+      NODE_ENV: production
+      PORT: 3000
     depends_on:
       postgres:
         condition: service_healthy
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
+    networks:
+      - internal
+      - proxy
+
+networks:
+  internal:
+    driver: bridge
+  proxy:
+    external: true
 
 volumes:
   optimalpost_pg:
