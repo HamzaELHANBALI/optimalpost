@@ -367,7 +367,7 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">Same Topic</h3>
-                      <p className="text-xs text-muted-foreground">5 archetypes: Rant, Analyst, Storyteller, Contrarian, Coach</p>
+                      <p className="text-xs text-muted-foreground">3 frameworks: Myth Buster, Negative Case Study, X vs Y</p>
                     </div>
                   </div>
                   <div className="space-y-3">
@@ -376,7 +376,8 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
                         key={index}
                         hooks={item.hooks}
                         content={item.script_content}
-                        angleType={item.angle_type}
+                        framework={item.framework}
+                        frameworkRationale={item.framework_rationale}
                         label={item.retention_tactic}
                         variant="double-down"
                         index={index}
@@ -393,7 +394,7 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
                     </div>
                     <div>
                       <h3 className="font-semibold text-lg">Adjacent Topics</h3>
-                      <p className="text-xs text-muted-foreground">5 pivots: Trap, Secret, Next Level, Origin, Comparison</p>
+                      <p className="text-xs text-muted-foreground">3 pivots: Common Trap, Industry Secret, Next Level</p>
                     </div>
                   </div>
                   <div className="space-y-3">

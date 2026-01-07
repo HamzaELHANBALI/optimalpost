@@ -1,159 +1,250 @@
 'use client';
 
-import { Copy, Check, MousePointerClick } from 'lucide-react';
+import { Copy, Check, MousePointerClick, Info } from 'lucide-react';
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { toast } from 'sonner';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Separator } from '@/components/ui/separator';
-import { ScriptSegment } from '@/lib/types';
+import { ScriptSegment, HookOption } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
-// Archetype/Pivot icons
+// Framework/Pivot icons
 const typeEmoji: Record<string, string> = {
-    'The Rant': '🔥',
-    'The Analyst': '📊',
-    'The Storyteller': '📖',
-    'The Contrarian': '🎭',
-    'The Coach': '💪',
+    'The Myth Buster': '🔨',
+    'The Negative Case Study': '📉',
+    'The X vs Y': '⚖️',
     'The Common Trap': '⚠️',
     'The Industry Secret': '🔐',
     'The Next Level': '🚀',
-    'The Origin Story': '🌱',
-    'The Comparison': '⚖️',
+};
+
+// Framework descriptions for tooltips
+const frameworkDescriptions: Record<string, string> = {
+    'The Myth Buster': 'Challenges common beliefs by exposing the truth. Structure: Myth → Why it\'s wrong → The truth → Proof',
+    'The Negative Case Study': 'Warns through failure stories. Structure: Mistake → Why it happens → The cost → The fix',
+    'The X vs Y': 'Compares old vs new approaches. Structure: Old way problems → New way benefits → How to switch → Results',
+    'The Common Trap': 'Reveals mistakes that come after initial success',
+    'The Industry Secret': 'Shares underrated tools or hacks related to the topic',
+    'The Next Level': 'Shows advanced moves after mastering the basics',
+};
+
+// Hook type styling
+const hookTypeStyles: Record<string, { bg: string; text: string; label: string }> = {
+    question: { bg: 'bg-blue-500/10', text: 'text-blue-600 dark:text-blue-400', label: 'Q' },
+    statement: { bg: 'bg-purple-500/10', text: 'text-purple-600 dark:text-purple-400', label: 'S' },
+    story: { bg: 'bg-orange-500/10', text: 'text-orange-600 dark:text-orange-400', label: 'ST' },
+    statistic: { bg: 'bg-green-500/10', text: 'text-green-600 dark:text-green-400', label: '#' },
 };
 
 interface ResultCardProps {
-    hooks: string[];
-    content: ScriptSegment[];     // Visual cuts array
-    angleType?: string;           // For same-topic: The archetype
-    pivotType?: string;           // For adjacent: The pivot strategy
-    label?: string;               // retention_tactic or pivot_topic
-    sublabel?: string;            // structure_preserved
+    hooks: HookOption[];
+    content: ScriptSegment[];
+    framework?: string;              // For same-topic: The framework name
+    frameworkRationale?: string;     // Why this framework works
+    pivotType?: string;              // For adjacent: The pivot strategy
+    label?: string;                  // retention_tactic or pivot_topic
+    sublabel?: string;               // structure_preserved
     variant: 'double-down' | 'experiment';
     index: number;
 }
 
-export function ResultCard({ hooks, content, angleType, pivotType, label, sublabel, variant, index }: ResultCardProps) {
+export function ResultCard({
+    hooks,
+    content,
+    framework,
+    frameworkRationale,
+    pivotType,
+    label,
+    sublabel,
+    variant,
+    index
+}: ResultCardProps) {
     const [copied, setCopied] = useState(false);
-    const [selectedHook, setSelectedHook] = useState(0);
+    const [selectedHookIndex, setSelectedHookIndex] = useState(0);
+
+    const activeHook = hooks[selectedHookIndex];
 
     const handleCopy = async () => {
-        // Format: Hook + double newline between each cut
-        const scriptText = content.map(c => c.text).join('\n\n');
-        const fullScript = `${hooks[selectedHook]}\n\n${scriptText}`;
+        // Format: Hook -> Bridge -> Body
+        const bodyText = content.map(c => c.text).join('\n\n');
+        const fullScript = `${activeHook.hook}\n${activeHook.bridge}\n\n${bodyText}`;
 
         await navigator.clipboard.writeText(fullScript);
         setCopied(true);
         toast.success('Script copied!', {
-            description: 'Hook + all cuts copied to clipboard.',
+            description: 'Hook + Bridge + Body copied to clipboard.',
         });
         setTimeout(() => setCopied(false), 2000);
     };
 
     const isDoubleDown = variant === 'double-down';
-    const typeLabel = angleType || pivotType;
-    const emoji = typeLabel ? typeEmoji[typeLabel] || '✨' : '✨';
+    const typeLabel = framework || pivotType;
+    const emoji = typeLabel ? (typeEmoji[typeLabel] || '✨') : '✨';
+    const description = typeLabel ? frameworkDescriptions[typeLabel] : undefined;
 
     return (
         <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.08, duration: 0.3 }}
+            transition={{ delay: index * 0.05, duration: 0.3 }}
         >
-            <Card
-                className={`relative group transition-all duration-300 hover:shadow-lg overflow-hidden ${isDoubleDown
-                    ? 'border-blue-500/30 hover:border-blue-500/60 bg-gradient-to-br from-blue-500/5 to-transparent'
-                    : 'border-purple-500/30 hover:border-purple-500/60 bg-gradient-to-br from-purple-500/5 via-pink-500/5 to-transparent'
-                    }`}
-            >
-                <CardContent className="pt-5 pb-4">
-                    {/* Archetype/Pivot Type Header */}
-                    {typeLabel && (
-                        <div className="mb-4">
-                            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${isDoubleDown
-                                ? 'bg-blue-500/15 text-blue-700 dark:text-blue-300'
-                                : 'bg-purple-500/15 text-purple-700 dark:text-purple-300'
-                                }`}>
-                                <span className="text-base">{emoji}</span>
-                                {typeLabel}
-                            </div>
+            <Card className={cn(
+                "group relative overflow-hidden transition-all duration-200 border border-border shadow-sm bg-card text-card-foreground hover:shadow-md"
+            )}>
+                <div className={cn(
+                    "absolute left-0 top-0 bottom-0 w-1",
+                    isDoubleDown ? "bg-primary" : "bg-purple-500"
+                )} />
+
+                <CardContent className="pt-5 pb-4 pl-6 pr-5">
+                    {/* Header: Framework Badge with Tooltip */}
+                    <div className="flex items-start justify-between mb-4">
+                        {typeLabel && (
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/50 border border-border text-xs font-medium text-foreground cursor-help">
+                                            <span>{emoji}</span>
+                                            {typeLabel}
+                                            {description && <Info className="h-3 w-3 text-muted-foreground ml-0.5" />}
+                                        </div>
+                                    </TooltipTrigger>
+                                    {description && (
+                                        <TooltipContent className="max-w-xs">
+                                            <p className="text-xs leading-relaxed">{description}</p>
+                                        </TooltipContent>
+                                    )}
+                                </Tooltip>
+                            </TooltipProvider>
+                        )}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                                "h-8 w-8 -mt-1 -mr-2 transition-opacity",
+                                copied ? "text-green-600 bg-green-50 dark:bg-green-950" : "text-muted-foreground opacity-0 group-hover:opacity-100"
+                            )}
+                            onClick={handleCopy}
+                        >
+                            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                        </Button>
+                    </div>
+
+                    {/* Framework Rationale */}
+                    {frameworkRationale && (
+                        <div className="mb-4 text-xs text-muted-foreground/90 italic">
+                            <span className="font-semibold text-foreground/70">Why this works:</span> {frameworkRationale}
                         </div>
                     )}
 
-                    {/* Strategy/Topic Info */}
+                    {/* Metadata */}
                     {(label || sublabel) && (
-                        <div className="mb-4 text-xs text-muted-foreground space-y-1">
+                        <div className="mb-4 text-xs text-muted-foreground/80 space-y-1">
                             {label && (
-                                <p className="leading-relaxed">
-                                    <span className="font-medium text-foreground/80">
+                                <p>
+                                    <span className="font-semibold text-foreground/70">
                                         {isDoubleDown ? '💡 Retention: ' : '🎯 Topic: '}
                                     </span>
                                     {label}
                                 </p>
                             )}
                             {sublabel && (
-                                <p className="leading-relaxed">
-                                    <span className="font-medium text-foreground/80">🔗 Structure: </span>
+                                <p>
+                                    <span className="font-semibold text-foreground/70">🔗 Structure: </span>
                                     {sublabel}
                                 </p>
                             )}
                         </div>
                     )}
 
-                    {/* Hook Selection */}
-                    <div className="space-y-2 mb-4">
-                        <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                            <MousePointerClick className="h-3 w-3" />
-                            Select a Hook
-                        </div>
+                    {/* Hook Selector */}
+                    <div className="space-y-2 mb-5">
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                            <MousePointerClick className="h-3 w-3" /> Select Hook
+                        </p>
                         <div className="grid gap-2">
-                            {hooks.map((hook, i) => (
-                                <div
-                                    key={i}
-                                    onClick={() => setSelectedHook(i)}
-                                    className={`p-2.5 rounded-md text-sm cursor-pointer transition-all border ${selectedHook === i
-                                        ? 'bg-background border-primary/50 shadow-sm ring-1 ring-primary/20'
-                                        : 'bg-muted/30 border-transparent hover:bg-muted/50 hover:border-border'
-                                        }`}
-                                >
-                                    <span className={`mr-2 font-bold ${selectedHook === i ? 'text-primary' : 'text-muted-foreground'}`}>
-                                        {i + 1}.
-                                    </span>
-                                    {hook}
-                                </div>
-                            ))}
+                            {hooks.map((h, i) => {
+                                const hookStyle = hookTypeStyles[h.hook_type] || hookTypeStyles.statement;
+                                return (
+                                    <button
+                                        key={i}
+                                        onClick={() => setSelectedHookIndex(i)}
+                                        className={cn(
+                                            "text-left w-full p-2.5 rounded-md text-sm transition-all border",
+                                            selectedHookIndex === i
+                                                ? "bg-primary/5 border-primary/20 text-foreground ring-1 ring-primary/10"
+                                                : "bg-transparent border-transparent hover:bg-muted/50 text-muted-foreground hover:text-foreground"
+                                        )}
+                                    >
+                                        <div className="flex items-start gap-2">
+                                            <span className={cn(
+                                                "font-mono text-xs mt-0.5",
+                                                selectedHookIndex === i ? "text-primary font-bold" : "opacity-50"
+                                            )}>
+                                                0{i + 1}
+                                            </span>
+                                            {/* Hook Type Badge */}
+                                            <span className={cn(
+                                                "text-[9px] px-1.5 py-0.5 rounded font-bold uppercase tracking-wide mt-0.5",
+                                                hookStyle.bg,
+                                                hookStyle.text
+                                            )}>
+                                                {hookStyle.label}
+                                            </span>
+                                            <div className="flex-1">
+                                                <span className="font-medium">{h.hook}</span>
+                                            </div>
+                                        </div>
+                                    </button>
+                                );
+                            })}
                         </div>
                     </div>
 
-                    <Separator className="my-4 opacity-50" />
+                    <Separator className="mb-5" />
 
-                    {/* Visual Cuts - Segmented Script */}
-                    <div className="space-y-4 ml-6 pl-4 border-l-2 border-primary/20">
+                    {/* SCRIPT DISPLAY */}
+                    <div className="space-y-4 pl-4 border-l-2 border-muted">
+
+                        {/* THE BRIDGE (Dynamic) */}
+                        <div className="relative">
+                            <span className="absolute -left-[26px] top-1 text-[9px] font-mono text-primary/60 select-none">
+                                BR
+                            </span>
+                            <AnimatePresence mode="wait">
+                                <motion.p
+                                    key={activeHook.bridge}
+                                    initial={{ opacity: 0, y: -5 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 5 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="text-sm leading-relaxed text-foreground font-semibold italic"
+                                >
+                                    {activeHook.bridge}
+                                </motion.p>
+                            </AnimatePresence>
+                        </div>
+
+                        {/* THE BODY (Static) */}
                         {content.map((cut, i) => (
-                            <div key={i} className="relative group/cut">
-                                {/* Cut number indicator - positioned outside the border */}
-                                <span className="absolute -left-10 top-1 text-[10px] font-mono text-muted-foreground/60 group-hover/cut:text-primary transition-colors w-5 text-right">
+                            <div key={i} className="relative">
+                                <span className="absolute -left-[26px] top-1 text-[9px] font-mono text-muted-foreground/40 select-none">
                                     {String(i + 1).padStart(2, '0')}
                                 </span>
-                                <p className="text-sm leading-6 text-foreground/90">
+                                <p className="text-sm leading-relaxed text-foreground/90 font-medium">
                                     {cut.text}
                                 </p>
                             </div>
                         ))}
                     </div>
-
-                    {/* Copy Button */}
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className={`absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity ${copied ? 'text-green-500' : 'text-muted-foreground'
-                            }`}
-                        onClick={handleCopy}
-                        title="Copy selected hook + all cuts"
-                    >
-                        {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                    </Button>
                 </CardContent>
             </Card>
         </motion.div>

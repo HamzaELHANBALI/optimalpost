@@ -3,7 +3,7 @@ import { generateObject } from 'ai';
 import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 
-// SCHEMA: Archetypes, Pivots, and Visual Cuts
+// ENHANCED SCHEMA: Bridge Logic + Framework Metadata + Hook Types
 const analysisSchema = z.object({
     analysis: z.object({
         hook: z.string().describe('The specific hook used in the original'),
@@ -15,71 +15,169 @@ const analysisSchema = z.object({
     }),
 
     same_topic_variations: z.array(z.object({
-        angle_type: z.string().describe('The archetype: "The Rant", "The Analyst", "The Storyteller", "The Contrarian", or "The Coach"'),
-        hooks: z.array(z.string()).length(3).describe('3 DISTINCT hooks matching this angle type.'),
+        framework: z.string().describe('The Viral Framework used: "The Myth Buster", "The Negative Case Study", or "The X vs Y"'),
+        framework_rationale: z.string().describe('Why this framework works for this topic (1 sentence, max 20 words)'),
+        hooks: z.array(z.object({
+            hook: z.string().describe('The scroll-stopping opening line.'),
+            bridge: z.string().describe('A 1-sentence transition (max 15 words) that connects THIS specific hook to the main body smoothly.'),
+            hook_type: z.enum(['question', 'statement', 'story', 'statistic']).describe('The psychological trigger type'),
+        })).length(3).describe('3 distinct hooks with different types'),
         script_content: z.array(z.object({
-            text: z.string().describe('Exactly 2 coherent sentences for this cut. Sentence 1 = setup, Sentence 2 = punch/elaboration. Creates tension for next cut.'),
-        })).min(4).max(5).describe('4-5 distinct visual cuts. Each cut has 2 sentences that flow together. Creates rhythm for retention editing.'),
-        retention_tactic: z.string().describe('Specific tactic used to keep retention for this angle.'),
-    })).length(5).describe('5 variations: Rant, Analyst, Storyteller, Contrarian, Coach.'),
+            text: z.string().describe('A distinct beat/cut of the script. Keep it punchy (1-2 sentences max).'),
+        })).min(4).max(6).describe('The core body of the script (excluding hook/bridge). 4-6 visual cuts.'),
+        retention_tactic: z.string().describe('Specific retention strategy used'),
+    })).length(3).describe('3 variations using the 3 core frameworks'),
 
     adjacent_topic_variations: z.array(z.object({
-        pivot_type: z.string().describe('The pivot: "The Common Trap", "The Industry Secret", "The Next Level", "The Origin Story", or "The Comparison"'),
-        hooks: z.array(z.string()).length(3).describe('3 hooks tailored to this adjacent topic.'),
+        pivot_type: z.string().describe('The pivot: "The Common Trap", "The Industry Secret", or "The Next Level"'),
+        hooks: z.array(z.object({
+            hook: z.string().describe('The scroll-stopping opening line.'),
+            bridge: z.string().describe('A 1-sentence transition (max 15 words) connecting this hook to the body.'),
+            hook_type: z.enum(['question', 'statement', 'story', 'statistic']).describe('The psychological trigger type'),
+        })).length(3),
         script_content: z.array(z.object({
-            text: z.string().describe('Exactly 2 coherent sentences for this cut. Setup + punch/elaboration.'),
-        })).min(4).max(5).describe('4-5 distinct visual cuts with 2 sentences each.'),
-        pivot_topic: z.string().describe('The specific adjacent topic being covered.'),
-        structure_preserved: z.string().describe('Which structural element was kept from the original.'),
-    })).length(5).describe('5 pivots: Trap, Secret, Next Level, Origin Story, Comparison.'),
+            text: z.string().describe('A distinct beat/cut (1-2 sentences).'),
+        })).min(4).max(6),
+        pivot_topic: z.string().describe('The specific adjacent topic'),
+        structure_preserved: z.string().describe('Which structural element was kept'),
+    })).length(3).describe('3 adjacent topic pivots'),
 });
 
-// SYSTEM PROMPT: Visual Cuts + Anti-Fluff + Archetypes
-const systemPrompt = `You are an expert Short-Form Video Strategist. You engineer retention through visual pacing.
+// IMPROVED SYSTEM PROMPT: Framework Enforcement + Bridge Law
+const systemPrompt = `You are a Viral Script Architect specializing in short-form content optimization.
 
-### 1. THE "CUT" SYSTEM (Critical):
-- **Think in Camera Cuts:** Each "cut" in script_content represents a new visual/beat.
-- **2 Sentences Per Cut:** Each cut MUST have exactly 2 coherent, connected sentences. First sentence = setup, second = punch or elaboration.
-- **Retention Optimized:** Each cut should create micro-tension that pulls into the next cut.
-- **Typical Flow (4-5 cuts):**
-  - Cut 1: Context + Why it matters
-  - Cut 2: The core truth + Proof/Example
-  - Cut 3: The twist + What most miss
-  - Cut 4: The actionable step + Result
-  - Cut 5: (Optional) Payoff + Open loop for comments
-- **Natural Rhythm:** Cuts should feel complete but create momentum to the next.
+### CORE RULES:
+1. **Bridge Law**: Every hook MUST have a unique bridge sentence that creates smooth narrative flow into the body.
+2. **Framework Enforcement**: Use ONLY the 3 prescribed frameworks. No generic structures.
+3. **Retention First**: Every sentence must justify its existence. Cut ruthlessly.
+4. **Grade 5 Language**: No jargon, no fluff, no "In this video..." openers.
+5. **Hook Type Diversity**: Across the 3 hooks, use different psychological triggers (question, statement, story, statistic).
 
-### 2. THE "NO FLUFF" POLICY:
-- **Delete the Intro:** Never say "In this video", "Here's why", "Let's dive in". Start immediately.
-- **No AI-Speak:** BAN: Unleash, Master, Delve, Landscape, Tap into, Game-changer, Leverage.
-- **Spoken English:** Use contractions ("It's", "Don't", "Can't").
-- **Grade 4 level:** Simple, punchy words.
+### THE 3 FRAMEWORKS FOR SAME-TOPIC VARIATIONS:
 
-### 3. SAME-TOPIC ARCHETYPES (5 Vibes):
-1. **The Rant (Polarizing):** Angry, frustrated. "Stop doing X!"
-2. **The Analyst (Logical):** Calm, data-driven. "Here's the math."
-3. **The Storyteller (Personal):** First-person. "I tried this for 30 days."
-4. **The Contrarian (Myth-Buster):** "Everyone's wrong about..."
-5. **The Coach (Motivational):** "You got this. Here's how."
+**Framework A: The Myth Buster (Contrarian)**
+- Hook: State a widely-held belief as a question or bold statement
+- Bridge: Challenge it directly ("That's completely wrong." / "Here's why that fails." / "Let me show you the truth.")
+- Body Structure: [Common Myth] → [Why it's wrong] → [The uncomfortable truth] → [Proof/Example]
+- Tone: Confident, slightly contrarian, authoritative
+- Example Flow:
+  * Hook: "Does eating fat make you fat?"
+  * Bridge: "That's the biggest nutrition lie of the century."
+  * Body: Cut 1: "For 40 years, we've been told fat is the enemy..." etc.
 
-### 4. ADJACENT-TOPIC PIVOTS (5 Vectors):
-1. **The Trap:** Mistake after initial success.
-2. **The Secret:** Underrated tool/hack.
-3. **The Next Step:** Advanced move.
-4. **The Origin Story:** Why this matters.
-5. **The Comparison:** X vs Y debate.
+**Framework B: The Negative Case Study (Warning)**
+- Hook: Personal story of failure OR common mistake
+- Bridge: Connect the mistake to the audience's pain ("And you're probably making the same mistake." / "This cost me everything." / "Here's what I learned.")
+- Body Structure: [The mistake] → [Why it happens] → [The cost/consequence] → [The fix/lesson]
+- Tone: Vulnerable but educational, cautionary
+- Example Flow:
+  * Hook: "I lost $5,000 in my first month of trading."
+  * Bridge: "And it was entirely preventable."
+  * Body: Cut 1: "I thought I could outsmart the market..." etc.
 
-### 5. HOOK DIVERSITY:
-Each variation's 3 hooks must be:
-- Hook 1: Aggressive/Direct
-- Hook 2: Curiosity Gap
-- Hook 3: Result-First
+**Framework C: The X vs Y Comparison (Solution-Oriented)**
+- Hook: Present the old/painful way OR the problem
+- Bridge: Introduce the alternative ("But there's a better way." / "Here's what actually works." / "Let me show you the difference.")
+- Body Structure: [Old way problems] → [New way benefits] → [How to switch] → [Expected results]
+- Tone: Solution-oriented, fast-paced, actionable
+- Example Flow:
+  * Hook: "Stop using a to-do list."
+  * Bridge: "Here's what high performers do instead."
+  * Body: Cut 1: "To-do lists create decision fatigue..." etc.
 
-Extract the viral DNA and reconstruct it into high-retention cuts.`;
+### THE 3 PIVOTS FOR ADJACENT-TOPIC VARIATIONS:
+
+**Pivot A: The Common Trap**
+- What mistake comes AFTER the original topic's success?
+- Example: Original = "How to get clients" → Pivot = "Why most new clients ghost you"
+
+**Pivot B: The Industry Secret**
+- What underrated tool/hack relates to this topic?
+- Example: Original = "Email marketing" → Pivot = "The subject line formula nobody talks about"
+
+**Pivot C: The Next Level**
+- What's the advanced move after mastering the original topic?
+- Example: Original = "Basic SEO" → Pivot = "How to rank without backlinks"
+
+### OUTPUT REQUIREMENTS:
+- Each script segment = 1 distinct beat/cut (max 2 sentences)
+- No paragraphs, no AI fluff words (unleash, master, delve, landscape, game-changer, leverage)
+- Use contractions (it's, don't, can't) - this is spoken content
+- Bridges must be 1 sentence, max 15 words
+- Framework rationale must be 1 sentence, max 20 words
+- Hook types must vary across the 3 options (don't use 3 questions in a row)
+
+### BRIDGE EXAMPLES (Critical):
+❌ BAD (Generic bridge that works for any hook):
+  Hook: "Stop drinking coffee."
+  Bridge: "Here's why."
+  
+✅ GOOD (Specific bridge tailored to THIS hook):
+  Hook: "Stop drinking coffee."
+  Bridge: "It's destroying your sleep quality in ways you don't realize."
+
+❌ BAD (Too long):
+  Bridge: "And this is something that I discovered after years of research and experimentation with different approaches."
+
+✅ GOOD (Concise):
+  Bridge: "And the results shocked me."
+
+Analyze the input content, extract its viral DNA, and rebuild it using these frameworks.`;
+
+// Quality validation function
+function validateScriptQuality(result: any): { passed: boolean; issues: string[] } {
+    const issues: string[] = [];
+
+    // Check same topic variations
+    result.same_topic_variations?.forEach((variation: any, vIndex: number) => {
+        // Check framework rationale length
+        const rationaleWords = variation.framework_rationale?.split(' ').length || 0;
+        if (rationaleWords > 25) {
+            issues.push(`Same-topic variation ${vIndex + 1}: Framework rationale too long (${rationaleWords} words, max 25)`);
+        }
+
+        // Check hooks
+        variation.hooks?.forEach((hookObj: any, hIndex: number) => {
+            // Check bridge length
+            const bridgeWords = hookObj.bridge?.split(' ').length || 0;
+            if (bridgeWords > 20) {
+                issues.push(`Same-topic variation ${vIndex + 1}, hook ${hIndex + 1}: Bridge too long (${bridgeWords} words, max 20)`);
+            }
+
+            // Check for AI fluff in bridge
+            const fluffPhrases = ['in this video', 'today i want to', 'let me show you how', 'here is why', "let's dive in"];
+            const bridgeLower = hookObj.bridge?.toLowerCase() || '';
+            fluffPhrases.forEach(phrase => {
+                if (bridgeLower.includes(phrase)) {
+                    issues.push(`Same-topic variation ${vIndex + 1}, hook ${hIndex + 1}: Bridge contains fluff phrase "${phrase}"`);
+                }
+            });
+        });
+
+        // Check for hook type diversity
+        const hookTypes = variation.hooks?.map((h: any) => h.hook_type) || [];
+        const uniqueTypes = new Set(hookTypes);
+        if (uniqueTypes.size === 1) {
+            issues.push(`Same-topic variation ${vIndex + 1}: All hooks use the same type (${hookTypes[0]}). Need diversity.`);
+        }
+    });
+
+    // Check adjacent topic variations
+    result.adjacent_topic_variations?.forEach((variation: any, vIndex: number) => {
+        variation.hooks?.forEach((hookObj: any, hIndex: number) => {
+            const bridgeWords = hookObj.bridge?.split(' ').length || 0;
+            if (bridgeWords > 20) {
+                issues.push(`Adjacent-topic variation ${vIndex + 1}, hook ${hIndex + 1}: Bridge too long (${bridgeWords} words)`);
+            }
+        });
+    });
+
+    return { passed: issues.length === 0, issues };
+}
 
 export async function POST(request: NextRequest) {
     try {
-        const { content, inputType = 'voiceover' } = await request.json();
+        const { content, inputType = 'script' } = await request.json();
 
         if (!content || content.trim().length === 0) {
             return NextResponse.json({ error: 'Content is required' }, { status: 400 });
@@ -89,12 +187,14 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
         }
 
-        const userPrompt = `Analyze this script and generate viral variations with distinct visual cuts:
+        const userPrompt = `Analyze this ${inputType} and generate 3 Structural Variations using the prescribed frameworks (Myth Buster, Negative Case Study, X vs Y Comparison):
         
         INPUT CONTENT:
         """
         ${content}
         """
+        
+        Remember: Each hook needs its own unique bridge that flows naturally into the body content.
         `;
 
         const result = await generateObject({
@@ -103,6 +203,13 @@ export async function POST(request: NextRequest) {
             system: systemPrompt,
             prompt: userPrompt,
         });
+
+        // Validate quality
+        const validation = validateScriptQuality(result.object);
+        if (!validation.passed) {
+            console.warn('⚠️  Quality validation warnings:', validation.issues);
+            // Log but don't block - we still return the result
+        }
 
         return NextResponse.json(result.object);
     } catch (error) {
