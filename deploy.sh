@@ -87,13 +87,21 @@ case "$1" in
     done
     echo "✅ Database is ready"
     
-    # Run migrations
-    echo "🔄 Running database migrations..."
-    docker compose exec -T app npx prisma migrate deploy || {
-      echo "⚠️  Migration failed. Trying to generate Prisma client first..."
-      docker compose exec -T app npx prisma generate
-      docker compose exec -T app npx prisma migrate deploy
-    }
+    # Run migrations or push schema
+    echo "🔄 Syncing database schema..."
+    if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations 2>/dev/null)" ]; then
+      echo "   Using migrations..."
+      docker compose exec -T app npx prisma migrate deploy || {
+        echo "⚠️  Migration failed. Falling back to db push..."
+        docker compose exec -T app npx prisma db push --accept-data-loss
+      }
+    else
+      echo "   No migrations found. Using db push..."
+      docker compose exec -T app npx prisma db push --accept-data-loss || {
+        echo "⚠️  db push failed. Generating Prisma client..."
+        docker compose exec -T app npx prisma generate
+      }
+    fi
     
     echo ""
     echo "✅ Deployment complete!"
@@ -129,13 +137,21 @@ case "$1" in
     echo "⏳ Waiting for database..."
     sleep 5
     
-    # Run migrations
-    echo "🔄 Running database migrations..."
-    docker compose exec -T app npx prisma migrate deploy || {
-      echo "⚠️  Migration failed. Trying to generate Prisma client first..."
-      docker compose exec -T app npx prisma generate
-      docker compose exec -T app npx prisma migrate deploy
-    }
+    # Run migrations or push schema
+    echo "🔄 Syncing database schema..."
+    if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations 2>/dev/null)" ]; then
+      echo "   Using migrations..."
+      docker compose exec -T app npx prisma migrate deploy || {
+        echo "⚠️  Migration failed. Falling back to db push..."
+        docker compose exec -T app npx prisma db push --accept-data-loss
+      }
+    else
+      echo "   No migrations found. Using db push..."
+      docker compose exec -T app npx prisma db push --accept-data-loss || {
+        echo "⚠️  db push failed. Generating Prisma client..."
+        docker compose exec -T app npx prisma generate
+      }
+    fi
     
     echo ""
     echo "✅ Update complete!"
@@ -144,8 +160,14 @@ case "$1" in
     
   migrate)
     echo "🔄 Running database migrations..."
-    docker compose exec app npx prisma migrate deploy
-    echo "✅ Migrations complete!"
+    if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations 2>/dev/null)" ]; then
+      docker compose exec app npx prisma migrate deploy
+      echo "✅ Migrations complete!"
+    else
+      echo "⚠️  No migrations found. Using db push instead..."
+      docker compose exec app npx prisma db push
+      echo "✅ Schema synced!"
+    fi
     ;;
     
   migrate-dev)
@@ -153,6 +175,40 @@ case "$1" in
     read -p "Migration name: " migration_name
     docker compose exec app npx prisma migrate dev --name "$migration_name"
     echo "✅ Migration created!"
+    ;;
+    
+  baseline)
+    echo "📋 Creating baseline migration for existing database..."
+    echo "⚠️  This will create a migration that matches your current database schema"
+    read -p "Continue? (yes/no): " confirm
+    if [ "$confirm" != "yes" ]; then
+      echo "❌ Baseline cancelled"
+      exit 1
+    fi
+    
+    echo "🔄 Creating baseline migration..."
+    # Create migration directory if it doesn't exist
+    mkdir -p prisma/migrations
+    
+    # Create baseline migration
+    docker compose exec app npx prisma migrate dev --name init --create-only || {
+      echo "⚠️  Could not create migration. The database might already match the schema."
+      echo "   You can use './deploy.sh migrate' which will use db push if no migrations exist."
+      exit 1
+    }
+    
+    # Find the created migration directory
+    MIGRATION_DIR=$(ls -t prisma/migrations | head -1)
+    if [ -n "$MIGRATION_DIR" ]; then
+      echo "📝 Marking migration as applied (baseline)..."
+      docker compose exec app npx prisma migrate resolve --applied "$MIGRATION_DIR"
+      echo "✅ Baseline migration created: $MIGRATION_DIR"
+    else
+      echo "⚠️  Could not find created migration directory"
+    fi
+    
+    echo ""
+    echo "You can now use './deploy.sh migrate' for future deployments"
     ;;
     
   backup)
@@ -284,8 +340,9 @@ case "$1" in
     echo "  init         - Initialize project (create .env, check configs)"
     echo "  deploy       - Build and deploy all services"
     echo "  update       - Pull latest code, rebuild image, and restart"
-    echo "  migrate      - Run database migrations"
+    echo "  migrate      - Run database migrations (or db push if no migrations)"
     echo "  migrate-dev  - Create new migration (development)"
+    echo "  baseline     - Create baseline migration for existing database"
     echo "  backup       - Backup database to deploy/backups/"
     echo "  restore      - Restore database from backup file"
     echo "  logs         - View logs (optional: specify service name)"
