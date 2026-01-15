@@ -68,3 +68,12 @@ export interface BrainstormRequest {
     sessionIds: string[];
     ideaCount: number; // 3-20
 }
+
+export interface BrainstormSession {
+    id: string;
+    ideas: VideoIdea[];
+    sessionIds: string[];
+    ideaCount: number;
+    createdAt: string;
+}
+

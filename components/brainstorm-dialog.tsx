@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Brain, Loader2, Sparkles, Check, X } from 'lucide-react';
+import { Brain, Loader2, Sparkles, History, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import {
     Dialog,
@@ -12,10 +12,9 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { VideoIdeaCard } from '@/components/video-idea-card';
 import { useAssetLibrary } from '@/hooks/use-asset-library';
-import { VideoIdea } from '@/lib/types';
+import { VideoIdea, BrainstormSession } from '@/lib/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -41,7 +40,10 @@ export function BrainstormDialog({ open, onOpenChange, onUseIdea }: BrainstormDi
     const [isGenerating, setIsGenerating] = useState(false);
     const [loadingMessage, setLoadingMessage] = useState(loadingMessages[0]);
     const [ideas, setIdeas] = useState<VideoIdea[]>([]);
-    const [step, setStep] = useState<'select' | 'results'>('select');
+    const [step, setStep] = useState<'select' | 'results' | 'history'>('select');
+    const [history, setHistory] = useState<BrainstormSession[]>([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [selectedHistorySession, setSelectedHistorySession] = useState<BrainstormSession | null>(null);
 
     // Select all sessions by default when dialog opens
     useEffect(() => {
@@ -132,6 +134,51 @@ export function BrainstormDialog({ open, onOpenChange, onUseIdea }: BrainstormDi
         setStep('select');
     };
 
+    // Fetch brainstorm history
+    const fetchHistory = async () => {
+        setIsLoadingHistory(true);
+        try {
+            const response = await fetch('/api/brainstorm/history');
+            if (response.ok) {
+                const data = await response.json();
+                setHistory(data.sessions);
+            } else {
+                const errorData = await response.json().catch(() => ({}));
+                console.error('History fetch error:', response.status, errorData);
+                toast.error(`Failed to load history: ${errorData.error || response.statusText}`);
+            }
+        } catch (err) {
+            console.error('History fetch exception:', err);
+            toast.error('Failed to load history');
+        } finally {
+            setIsLoadingHistory(false);
+        }
+    };
+
+    // Delete a history session
+    const deleteHistorySession = async (sessionId: string) => {
+        try {
+            const response = await fetch(`/api/brainstorm/history?id=${sessionId}`, {
+                method: 'DELETE',
+            });
+            if (response.ok) {
+                setHistory(prev => prev.filter(s => s.id !== sessionId));
+                if (selectedHistorySession?.id === sessionId) {
+                    setSelectedHistorySession(null);
+                }
+                toast.success('Session deleted');
+            }
+        } catch (err) {
+            toast.error('Failed to delete session');
+        }
+    };
+
+    // View history
+    const handleViewHistory = () => {
+        setStep('history');
+        fetchHistory();
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col">
@@ -152,10 +199,10 @@ export function BrainstormDialog({ open, onOpenChange, onUseIdea }: BrainstormDi
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="flex-1 flex flex-col min-h-0"
+                            className="flex flex-col overflow-hidden"
                         >
                             {/* Session Selection */}
-                            <div className="space-y-4 flex-1 min-h-0 flex flex-col">
+                            <div className="space-y-4 flex flex-col">
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <h3 className="font-semibold">Select Sessions</h3>
@@ -172,7 +219,7 @@ export function BrainstormDialog({ open, onOpenChange, onUseIdea }: BrainstormDi
                                     </Button>
                                 </div>
 
-                                <ScrollArea className="flex-1 border rounded-md">
+                                <ScrollArea className="h-[250px] border rounded-md">
                                     <div className="p-4 space-y-2">
                                         {sessions.length === 0 ? (
                                             <div className="text-center py-8 text-muted-foreground">
@@ -247,31 +294,42 @@ export function BrainstormDialog({ open, onOpenChange, onUseIdea }: BrainstormDi
                             </div>
 
                             {/* Actions */}
-                            <div className="flex items-center justify-end gap-2 pt-4 border-t">
+                            <div className="flex items-center justify-between pt-4 border-t">
                                 <Button
-                                    variant="outline"
-                                    onClick={() => onOpenChange(false)}
-                                    disabled={isGenerating}
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={handleViewHistory}
+                                    className="text-muted-foreground"
                                 >
-                                    Cancel
+                                    <History className="h-4 w-4 mr-2" />
+                                    History
                                 </Button>
-                                <Button
-                                    onClick={handleGenerate}
-                                    disabled={isGenerating || selectedSessions.size === 0}
-                                    className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
-                                >
-                                    {isGenerating ? (
-                                        <span className="flex items-center gap-2">
-                                            <Loader2 className="h-4 w-4 animate-spin" />
-                                            {loadingMessage}
-                                        </span>
-                                    ) : (
-                                        <span className="flex items-center gap-2">
-                                            <Sparkles className="h-4 w-4" />
-                                            Generate Ideas
-                                        </span>
-                                    )}
-                                </Button>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => onOpenChange(false)}
+                                        disabled={isGenerating}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={handleGenerate}
+                                        disabled={isGenerating || selectedSessions.size === 0}
+                                        className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+                                    >
+                                        {isGenerating ? (
+                                            <span className="flex items-center gap-2">
+                                                <Loader2 className="h-4 w-4 animate-spin" />
+                                                {loadingMessage}
+                                            </span>
+                                        ) : (
+                                            <span className="flex items-center gap-2">
+                                                <Sparkles className="h-4 w-4" />
+                                                Generate Ideas
+                                            </span>
+                                        )}
+                                    </Button>
+                                </div>
                             </div>
                         </motion.div>
                     )}
@@ -282,7 +340,7 @@ export function BrainstormDialog({ open, onOpenChange, onUseIdea }: BrainstormDi
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -10 }}
-                            className="flex-1 flex flex-col min-h-0"
+                            className="flex flex-col overflow-hidden"
                         >
                             <div className="flex items-center justify-between mb-4">
                                 <div>
@@ -300,7 +358,7 @@ export function BrainstormDialog({ open, onOpenChange, onUseIdea }: BrainstormDi
                                 </Button>
                             </div>
 
-                            <ScrollArea className="flex-1">
+                            <ScrollArea className="h-[350px]">
                                 <div className="grid md:grid-cols-2 gap-4 p-1">
                                     {ideas.map((idea, index) => (
                                         <VideoIdeaCard
@@ -314,6 +372,111 @@ export function BrainstormDialog({ open, onOpenChange, onUseIdea }: BrainstormDi
                             </ScrollArea>
 
                             <div className="flex items-center justify-end gap-2 pt-4 border-t mt-4">
+                                <Button
+                                    variant="outline"
+                                    onClick={() => onOpenChange(false)}
+                                >
+                                    Close
+                                </Button>
+                            </div>
+                        </motion.div>
+                    )}
+
+                    {step === 'history' && (
+                        <motion.div
+                            key="history"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            className="flex flex-col overflow-hidden"
+                        >
+                            <div className="flex items-center justify-between mb-4">
+                                <div>
+                                    <h3 className="font-semibold">Brainstorm History</h3>
+                                    <p className="text-sm text-muted-foreground">
+                                        {history.length} past session{history.length !== 1 ? 's' : ''}
+                                    </p>
+                                </div>
+                            </div>
+
+                            {isLoadingHistory ? (
+                                <div className="flex items-center justify-center py-12">
+                                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                                </div>
+                            ) : selectedHistorySession ? (
+                                <>
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setSelectedHistorySession(null)}
+                                        >
+                                            ← Back to list
+                                        </Button>
+                                        <span className="text-sm text-muted-foreground">
+                                            {formatDistanceToNow(new Date(selectedHistorySession.createdAt), { addSuffix: true })}
+                                        </span>
+                                    </div>
+                                    <ScrollArea className="h-[300px]">
+                                        <div className="grid md:grid-cols-2 gap-4 p-1">
+                                            {(selectedHistorySession.ideas as VideoIdea[]).map((idea, index) => (
+                                                <VideoIdeaCard
+                                                    key={index}
+                                                    idea={idea}
+                                                    index={index}
+                                                    onUseInAnalyzer={onUseIdea ? () => handleUseIdea(idea) : undefined}
+                                                />
+                                            ))}
+                                        </div>
+                                    </ScrollArea>
+                                </>
+                            ) : history.length === 0 ? (
+                                <div className="text-center py-12 text-muted-foreground">
+                                    <History className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                                    <p>No brainstorm history yet</p>
+                                    <p className="text-sm">Generate some ideas to see them here</p>
+                                </div>
+                            ) : (
+                                <ScrollArea className="h-[300px] border rounded-md">
+                                    <div className="p-2 space-y-2">
+                                        {history.map((session) => (
+                                            <div
+                                                key={session.id}
+                                                className="flex items-center justify-between p-3 rounded-md border bg-background hover:bg-muted/50 cursor-pointer transition-colors"
+                                                onClick={() => setSelectedHistorySession(session)}
+                                            >
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-medium">
+                                                        {session.ideaCount} ideas generated
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {formatDistanceToNow(new Date(session.createdAt), { addSuffix: true })}
+                                                    </p>
+                                                </div>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="text-muted-foreground hover:text-destructive"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        deleteHistorySession(session.id);
+                                                    }}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </ScrollArea>
+                            )}
+
+                            <div className="flex items-center justify-between pt-4 border-t mt-4">
+                                <Button
+                                    variant="ghost"
+                                    onClick={() => setStep('select')}
+                                >
+                                    ← Back to Generator
+                                </Button>
                                 <Button
                                     variant="outline"
                                     onClick={() => onOpenChange(false)}

@@ -142,7 +142,20 @@ Each idea should include:
         // Ensure we have the exact number requested
         const ideas = result.object.ideas.slice(0, ideaCount);
 
-        return NextResponse.json({ ideas });
+        // Save brainstorm session to database
+        const brainstormSession = await prisma.brainstormSession.create({
+            data: {
+                userId: session.user.id,
+                ideas: ideas,
+                sessionIds: sessionIds,
+                ideaCount: ideas.length,
+            },
+        });
+
+        return NextResponse.json({
+            ideas,
+            sessionId: brainstormSession.id,
+        });
     } catch (error) {
         console.error('Brainstorm error:', error);
         return NextResponse.json(
@@ -151,3 +164,4 @@ Each idea should include:
         );
     }
 }
+

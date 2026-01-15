@@ -17,6 +17,7 @@ model User {
   accounts  Account[]
   sessions  Session[]
   analysis  AnalysisSession[]
+  brainstormSessions BrainstormSession[]
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
@@ -76,3 +77,20 @@ model AnalysisSession {
   @@index([userId])
   @@index([userId, timestamp(sort: Desc)])
 }
+
+// Brainstorming history
+model BrainstormSession {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  ideas        Json     // Array of VideoIdea objects
+  sessionIds   String[] // IDs of AnalysisSessions used for generation
+  ideaCount    Int
+
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([userId, createdAt(sort: Desc)])
+}
+
