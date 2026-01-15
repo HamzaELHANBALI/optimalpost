@@ -89,16 +89,19 @@ case "$1" in
     
     # Run migrations or push schema
     echo "🔄 Syncing database schema..."
-    if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations 2>/dev/null)" ]; then
-      echo "   Using migrations..."
-      docker compose exec -T app npx prisma migrate deploy || {
-        echo "⚠️  Migration failed. Falling back to db push..."
-        docker compose exec -T app npx prisma db push --accept-data-loss
-      }
+    # Try migrate deploy, but if it fails with P3005 (no migrations), use db push
+    MIGRATE_OUTPUT=$(docker compose exec -T app npx prisma migrate deploy 2>&1)
+    MIGRATE_EXIT=$?
+    
+    if echo "$MIGRATE_OUTPUT" | grep -q "P3005\|No migration found"; then
+      echo "   No migrations found. Using db push to sync schema..."
+      docker compose exec -T app npx prisma db push --accept-data-loss
+    elif [ $MIGRATE_EXIT -eq 0 ]; then
+      echo "✅ Migrations applied successfully"
     else
-      echo "   No migrations found. Using db push..."
+      echo "⚠️  Migration failed. Falling back to db push..."
       docker compose exec -T app npx prisma db push --accept-data-loss || {
-        echo "⚠️  db push failed. Generating Prisma client..."
+        echo "⚠️  db push failed. Generating Prisma client only..."
         docker compose exec -T app npx prisma generate
       }
     fi
@@ -137,18 +140,34 @@ case "$1" in
     echo "⏳ Waiting for database..."
     sleep 5
     
+    # Wait for database to be ready
+    timeout=30
+    counter=0
+    while ! docker compose exec -T postgres pg_isready -U optimalpost -d optimalpost >/dev/null 2>&1; do
+      if [ $counter -ge $timeout ]; then
+        echo "❌ Database failed to start within $timeout seconds"
+        exit 1
+      fi
+      echo "   Waiting for database... ($counter/$timeout)"
+      sleep 2
+      counter=$((counter + 2))
+    done
+    
     # Run migrations or push schema
     echo "🔄 Syncing database schema..."
-    if [ -d "prisma/migrations" ] && [ "$(ls -A prisma/migrations 2>/dev/null)" ]; then
-      echo "   Using migrations..."
-      docker compose exec -T app npx prisma migrate deploy || {
-        echo "⚠️  Migration failed. Falling back to db push..."
-        docker compose exec -T app npx prisma db push --accept-data-loss
-      }
+    # Try migrate deploy, but if it fails with P3005 (no migrations), use db push
+    MIGRATE_OUTPUT=$(docker compose exec -T app npx prisma migrate deploy 2>&1)
+    MIGRATE_EXIT=$?
+    
+    if echo "$MIGRATE_OUTPUT" | grep -q "P3005\|No migration found"; then
+      echo "   No migrations found. Using db push to sync schema..."
+      docker compose exec -T app npx prisma db push --accept-data-loss
+    elif [ $MIGRATE_EXIT -eq 0 ]; then
+      echo "✅ Migrations applied successfully"
     else
-      echo "   No migrations found. Using db push..."
+      echo "⚠️  Migration failed. Falling back to db push..."
       docker compose exec -T app npx prisma db push --accept-data-loss || {
-        echo "⚠️  db push failed. Generating Prisma client..."
+        echo "⚠️  db push failed. Generating Prisma client only..."
         docker compose exec -T app npx prisma generate
       }
     fi
