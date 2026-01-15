@@ -57,3 +57,14 @@ export interface OptimizeRequest {
     content: string;
     inputType: 'script' | 'transcribed';
 }
+
+export interface VideoIdea {
+    title: string;
+    hook: string;
+    rationale: string; // Why this idea fits the niche
+}
+
+export interface BrainstormRequest {
+    sessionIds: string[];
+    ideaCount: number; // 3-20
+}

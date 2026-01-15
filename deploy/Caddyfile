@@ -1,7 +1,17 @@
 {
     email your-email@example.com
+    # Caddy automatically obtains and renews SSL certificates
 }
 
-yourdomain.com {
-    reverse_proxy app:3000
+# ProvenPost domain configuration
+# Caddy will automatically handle HTTPS via Let's Encrypt
+provenpost.com {
+    reverse_proxy localhost:3000
+    # Or if using Docker network:
+    # reverse_proxy app:3000
+}
+
+# Optional: Add www subdomain redirect
+www.provenpost.com {
+    redir https://provenpost.com{uri} permanent
 }

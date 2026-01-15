@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Repeat, Sparkles, History, Loader2, AlertCircle, Zap, Brain, Heart, Target, Users, Layers, FileAudio, PenLine, ArrowRight, Edit3 } from 'lucide-react';
+import { Repeat, Sparkles, History, Loader2, AlertCircle, Zap, Brain, Heart, Target, Users, Layers, FileAudio, PenLine, ArrowRight, Edit3, Lightbulb } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ResultCard } from '@/components/result-card';
 import { HistorySidebar } from '@/components/history-sidebar';
 import { FileUpload } from '@/components/file-upload';
+import { BrainstormDialog } from '@/components/brainstorm-dialog';
 import { useAssetLibrary } from '@/hooks/use-asset-library';
-import { AnalysisResult } from '@/lib/types';
+import { AnalysisResult, VideoIdea } from '@/lib/types';
 
 const loadingMessages = [
   'Analyzing hook patterns...',
@@ -38,6 +39,7 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
   const [transcript, setTranscript] = useState<string | null>(null);
   const [isEditingTranscript, setIsEditingTranscript] = useState(false);
   const [isFromTranscription, setIsFromTranscription] = useState(false);
+  const [brainstormOpen, setBrainstormOpen] = useState(false);
 
   const { addSession, currentSession, clearCurrentSession } = useAssetLibrary();
 
@@ -126,9 +128,48 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
     }
   };
 
+  const handleUseIdea = (idea: VideoIdea) => {
+    // Use the hook as the content to analyze
+    setContent(idea.hook);
+    setResult(null);
+    setError(null);
+    // Optionally auto-trigger analysis
+    // handleAnalyze();
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/30">
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-8">
+        {/* Brainstorming Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+        >
+          <Card className="border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/5 via-blue-500/5 to-transparent">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Lightbulb className="h-5 w-5 text-purple-500" />
+                    <CardTitle className="text-xl">Need Fresh Ideas?</CardTitle>
+                  </div>
+                  <CardDescription>
+                    Analyze your content history to generate new video ideas that align with your niche
+                  </CardDescription>
+                </div>
+                <Button
+                  onClick={() => setBrainstormOpen(true)}
+                  className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600"
+                >
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Brainstorm Ideas
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
         {/* Input Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -422,6 +463,13 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
       {onHistoryOpenChange && (
         <HistorySidebar open={historyOpen} onOpenChange={onHistoryOpenChange} />
       )}
+
+      {/* Brainstorm Dialog */}
+      <BrainstormDialog
+        open={brainstormOpen}
+        onOpenChange={setBrainstormOpen}
+        onUseIdea={handleUseIdea}
+      />
     </div>
   );
 }
