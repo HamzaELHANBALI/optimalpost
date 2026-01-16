@@ -13,6 +13,7 @@ import { ResultCard } from '@/components/result-card';
 import { HistorySidebar } from '@/components/history-sidebar';
 import { FileUpload } from '@/components/file-upload';
 import { BrainstormDialog } from '@/components/brainstorm-dialog';
+import { TemplateBrowser } from '@/components/template-browser';
 import { useAssetLibrary } from '@/hooks/use-asset-library';
 import { AnalysisResult, VideoIdea } from '@/lib/types';
 
@@ -40,6 +41,7 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
   const [isEditingTranscript, setIsEditingTranscript] = useState(false);
   const [isFromTranscription, setIsFromTranscription] = useState(false);
   const [brainstormOpen, setBrainstormOpen] = useState(false);
+  const [templateBrowserOpen, setTemplateBrowserOpen] = useState(false);
 
   const { addSession, currentSession, clearCurrentSession } = useAssetLibrary();
 
@@ -135,6 +137,12 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
     setError(null);
     // Optionally auto-trigger analysis
     // handleAnalyze();
+  };
+
+  const handleSelectTemplate = (script: string) => {
+    setContent(script);
+    setResult(null);
+    setError(null);
   };
 
   return (
@@ -257,6 +265,21 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
                       disabled={isLoading}
                     />
 
+                    {/* Empty state hint */}
+                    {!content.trim() && (
+                      <div className="flex items-center justify-center gap-2 py-2">
+                        <span className="text-sm text-muted-foreground">New here?</span>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          className="text-primary p-0 h-auto"
+                          onClick={() => setTemplateBrowserOpen(true)}
+                        >
+                          Try a proven template →
+                        </Button>
+                      </div>
+                    )}
+
                     <Button
                       size="lg"
                       className="w-full text-base font-semibold h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 transition-all duration-300"
@@ -317,6 +340,38 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
               transition={{ duration: 0.5 }}
               className="space-y-6"
             >
+              {/* Framework Recommendations Banner */}
+              {result.classification && (
+                <Card className="border-2 border-purple-500/30 bg-gradient-to-br from-purple-500/5 via-blue-500/5 to-transparent">
+                  <CardContent className="pt-5 pb-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-purple-500/10 shrink-0">
+                        <Sparkles className="h-5 w-5 text-purple-500" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-sm mb-1">AI Framework Recommendation</h3>
+                        <p className="text-xs text-muted-foreground mb-3">
+                          {result.classification.classification_reason}
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {result.classification.recommended_frameworks.map((framework, i) => (
+                            <span
+                              key={i}
+                              className="inline-flex items-center px-2.5 py-1 rounded-md bg-purple-500/10 text-purple-700 dark:text-purple-300 text-xs font-medium"
+                            >
+                              ✨ {framework}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-muted text-muted-foreground uppercase tracking-wide shrink-0">
+                        {result.classification.content_type}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               {/* Analysis Breakdown */}
               <Card className="border-2 border-yellow-500/30 bg-gradient-to-br from-yellow-500/5 via-orange-500/5 to-transparent">
                 <CardHeader className="pb-3">
@@ -469,6 +524,13 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
         open={brainstormOpen}
         onOpenChange={setBrainstormOpen}
         onUseIdea={handleUseIdea}
+      />
+
+      {/* Template Browser Dialog */}
+      <TemplateBrowser
+        open={templateBrowserOpen}
+        onOpenChange={setTemplateBrowserOpen}
+        onSelectTemplate={handleSelectTemplate}
       />
     </div>
   );

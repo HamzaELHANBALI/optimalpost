@@ -4,6 +4,13 @@ import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 
 // ENHANCED SCHEMA: Bridge Logic + Framework Metadata + Hook Types
+// Content classification schema for framework recommendations
+const classificationSchema = z.object({
+    content_type: z.enum(['tutorial', 'story', 'opinion', 'general']).describe('The type of content'),
+    recommended_frameworks: z.array(z.string()).describe('2-3 frameworks that work best for this content type'),
+    classification_reason: z.string().describe('Brief reason for this classification (1 sentence)'),
+});
+
 const analysisSchema = z.object({
     analysis: z.object({
         hook: z.string().describe('The specific hook used in the original'),
@@ -187,6 +194,25 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
         }
 
+        // Classification prompt (runs with cheaper model)
+        const classificationPrompt = `Classify this content and recommend which viral frameworks would work best:
+
+Content: "${content.slice(0, 500)}${content.length > 500 ? '...' : ''}"
+
+Content Types:
+- tutorial: How-to content, step-by-step guides, educational
+- story: Personal narratives, case studies, experiences  
+- opinion: Contrarian takes, hot takes, controversial views
+- general: Mixed content, informational
+
+Framework Options:
+- "The Myth Buster": Best for opinion/contrarian content
+- "The Negative Case Study": Best for story-based warnings
+- "The X vs Y": Best for tutorials comparing approaches
+- "The Common Trap": Best for follow-up warnings
+- "The Industry Secret": Best for insider tips
+- "The Next Level": Best for advanced tutorials`;
+
         const userPrompt = `Analyze this ${inputType} and generate 3 Structural Variations using the prescribed frameworks (Myth Buster, Negative Case Study, X vs Y Comparison):
         
         INPUT CONTENT:
@@ -197,21 +223,32 @@ export async function POST(request: NextRequest) {
         Remember: Each hook needs its own unique bridge that flows naturally into the body content.
         `;
 
-        const result = await generateObject({
-            model: openai('gpt-4o'),
-            schema: analysisSchema,
-            system: systemPrompt,
-            prompt: userPrompt,
-        });
+        // Run classification and main generation in parallel for speed
+        const [classificationResult, analysisResult] = await Promise.all([
+            generateObject({
+                model: openai('gpt-4o-mini'), // Cheaper model for classification
+                schema: classificationSchema,
+                prompt: classificationPrompt,
+            }),
+            generateObject({
+                model: openai('gpt-4o'),
+                schema: analysisSchema,
+                system: systemPrompt,
+                prompt: userPrompt,
+            }),
+        ]);
 
         // Validate quality
-        const validation = validateScriptQuality(result.object);
+        const validation = validateScriptQuality(analysisResult.object);
         if (!validation.passed) {
             console.warn('⚠️  Quality validation warnings:', validation.issues);
-            // Log but don't block - we still return the result
         }
 
-        return NextResponse.json(result.object);
+        // Return combined result with classification
+        return NextResponse.json({
+            classification: classificationResult.object,
+            ...analysisResult.object,
+        });
     } catch (error) {
         console.error('Optimization error:', error);
         return NextResponse.json(

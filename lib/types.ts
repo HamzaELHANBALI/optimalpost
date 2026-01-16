@@ -1,5 +1,11 @@
 // lib/types.ts
 
+export interface ContentClassification {
+    content_type: 'tutorial' | 'story' | 'opinion' | 'general';
+    recommended_frameworks: string[];
+    classification_reason: string;
+}
+
 export interface ContentAnalysis {
     hook: string;
     structure: string;
@@ -38,6 +44,7 @@ export interface AdjacentTopicVariation {
 }
 
 export interface AnalysisResult {
+    classification?: ContentClassification;
     analysis: ContentAnalysis;
     same_topic_variations: SameTopicVariation[];
     adjacent_topic_variations: AdjacentTopicVariation[];

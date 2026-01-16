@@ -1,9 +1,10 @@
 'use client';
 
-import { Copy, Check, MousePointerClick, Info } from 'lucide-react';
+import { Copy, Check, MousePointerClick, Info, Video } from 'lucide-react';
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { ScriptRunner } from '@/components/script-runner';
 import {
     Tooltip,
     TooltipContent,
@@ -69,6 +70,7 @@ export function ResultCard({
 }: ResultCardProps) {
     const [copied, setCopied] = useState(false);
     const [selectedHookIndex, setSelectedHookIndex] = useState(0);
+    const [scriptRunnerOpen, setScriptRunnerOpen] = useState(false);
 
     const activeHook = hooks[selectedHookIndex];
 
@@ -125,17 +127,28 @@ export function ResultCard({
                                 </Tooltip>
                             </TooltipProvider>
                         )}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className={cn(
-                                "h-8 w-8 -mt-1 -mr-2 transition-opacity",
-                                copied ? "text-green-600 bg-green-50 dark:bg-green-950" : "text-muted-foreground opacity-0 group-hover:opacity-100"
-                            )}
-                            onClick={handleCopy}
-                        >
-                            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                        </Button>
+                        <div className="flex items-center gap-1">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 -mt-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-primary"
+                                onClick={() => setScriptRunnerOpen(true)}
+                                title="Open in Script Runner"
+                            >
+                                <Video className="h-4 w-4" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className={cn(
+                                    "h-8 w-8 -mt-1 -mr-2 transition-opacity",
+                                    copied ? "text-green-600 bg-green-50 dark:bg-green-950" : "text-muted-foreground opacity-0 group-hover:opacity-100"
+                                )}
+                                onClick={handleCopy}
+                            >
+                                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Framework Rationale */}
@@ -247,6 +260,14 @@ export function ResultCard({
                     </div>
                 </CardContent>
             </Card>
+
+            {/* Script Runner Dialog */}
+            <ScriptRunner
+                open={scriptRunnerOpen}
+                onOpenChange={setScriptRunnerOpen}
+                hook={activeHook}
+                segments={content}
+            />
         </motion.div>
     );
 }
