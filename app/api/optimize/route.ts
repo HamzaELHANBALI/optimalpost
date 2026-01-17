@@ -33,6 +33,8 @@ const analysisSchema = z.object({
             text: z.string().describe('A distinct beat/cut of the script. Keep it punchy (1-2 sentences max).'),
         })).min(4).max(6).describe('The core body of the script (excluding hook/bridge). 4-6 visual cuts.'),
         retention_tactic: z.string().describe('Specific retention strategy used'),
+        hashtags: z.array(z.string()).length(5).describe('5 TikTok-relevant hashtags (include # symbol). Mix trending + niche + topic-specific.'),
+        video_title: z.string().describe('Short catchy TikTok video title/caption (1-2 lines, max 100 chars). Creates curiosity or FOMO.'),
     })).length(3).describe('3 variations using the 3 core frameworks'),
 
     adjacent_topic_variations: z.array(z.object({
@@ -47,6 +49,8 @@ const analysisSchema = z.object({
         })).min(4).max(6),
         pivot_topic: z.string().describe('The specific adjacent topic'),
         structure_preserved: z.string().describe('Which structural element was kept'),
+        hashtags: z.array(z.string()).length(5).describe('5 TikTok-relevant hashtags (include # symbol). Mix trending + niche + topic-specific.'),
+        video_title: z.string().describe('Short catchy TikTok video title/caption (1-2 lines, max 100 chars). Creates curiosity or FOMO.'),
     })).length(3).describe('3 adjacent topic pivots'),
 });
 
@@ -128,6 +132,21 @@ const systemPrompt = `You are a Viral Script Architect specializing in short-for
 
 ✅ GOOD (Concise):
   Bridge: "And the results shocked me."
+
+### TIKTOK HASHTAGS & VIDEO TITLE:
+
+**Hashtags (5 per script):**
+- Include 1-2 trending hashtags: #fyp, #foryou, #viral, #foryoupage
+- Include 2-3 niche-specific hashtags based on the topic
+- Always include the # symbol
+- Keep them lowercase, no spaces
+
+**Video Title:**
+- Max 100 characters
+- Create curiosity or FOMO (Fear Of Missing Out)
+- Use emojis sparingly (1-2 max)
+- Examples: "POV: you finally learn the truth 👀", "This changed everything for me"
+- No clickbait without payoff
 
 Analyze the input content, extract its viral DNA, and rebuild it using these frameworks.`;
 

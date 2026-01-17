@@ -477,6 +477,8 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
                         label={item.retention_tactic}
                         variant="double-down"
                         index={index}
+                        hashtags={item.hashtags}
+                        videoTitle={item.video_title}
                       />
                     ))}
                   </div>
@@ -504,6 +506,8 @@ export function Dashboard({ historyOpen = false, onHistoryOpenChange }: Dashboar
                         sublabel={item.structure_preserved}
                         variant="experiment"
                         index={index}
+                        hashtags={item.hashtags}
+                        videoTitle={item.video_title}
                       />
                     ))}
                   </div>

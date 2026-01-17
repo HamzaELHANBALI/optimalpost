@@ -1,6 +1,6 @@
 'use client';
 
-import { Copy, Check, MousePointerClick, Info, Video } from 'lucide-react';
+import { Copy, Check, MousePointerClick, Info, Video, Hash } from 'lucide-react';
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,6 +55,8 @@ interface ResultCardProps {
     sublabel?: string;               // structure_preserved
     variant: 'double-down' | 'experiment';
     index: number;
+    hashtags?: string[];             // TikTok hashtags
+    videoTitle?: string;             // TikTok video title/caption
 }
 
 export function ResultCard({
@@ -66,7 +68,9 @@ export function ResultCard({
     label,
     sublabel,
     variant,
-    index
+    index,
+    hashtags,
+    videoTitle
 }: ResultCardProps) {
     const [copied, setCopied] = useState(false);
     const [selectedHookIndex, setSelectedHookIndex] = useState(0);
@@ -75,14 +79,21 @@ export function ResultCard({
     const activeHook = hooks[selectedHookIndex];
 
     const handleCopy = async () => {
-        // Format: Hook -> Bridge -> Body
+        // Format: Hook -> Bridge -> Body -> Title -> Hashtags
         const bodyText = content.map(c => c.text).join('\n\n');
-        const fullScript = `${activeHook.hook}\n${activeHook.bridge}\n\n${bodyText}`;
+        let fullScript = `${activeHook.hook}\n${activeHook.bridge}\n\n${bodyText}`;
+
+        if (videoTitle) {
+            fullScript += `\n\n---\n📝 ${videoTitle}`;
+        }
+        if (hashtags && hashtags.length > 0) {
+            fullScript += `\n${hashtags.join(' ')}`;
+        }
 
         await navigator.clipboard.writeText(fullScript);
         setCopied(true);
         toast.success('Script copied!', {
-            description: 'Hook + Bridge + Body copied to clipboard.',
+            description: 'Hook + Bridge + Body + Title + Hashtags copied to clipboard.',
         });
         setTimeout(() => setCopied(false), 2000);
     };
@@ -258,6 +269,42 @@ export function ResultCard({
                             </div>
                         ))}
                     </div>
+
+                    {/* TikTok Video Title & Hashtags */}
+                    {(videoTitle || (hashtags && hashtags.length > 0)) && (
+                        <div className="mt-5 pt-4 border-t border-border/50 space-y-3">
+                            {/* Video Title */}
+                            {videoTitle && (
+                                <div className="space-y-1">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                                        📝 Video Title
+                                    </p>
+                                    <p className="text-sm text-foreground/90 font-medium bg-muted/30 px-3 py-2 rounded-md">
+                                        {videoTitle}
+                                    </p>
+                                </div>
+                            )}
+
+                            {/* Hashtags */}
+                            {hashtags && hashtags.length > 0 && (
+                                <div className="space-y-1.5">
+                                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                                        <Hash className="h-3 w-3" /> Hashtags
+                                    </p>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {hashtags.map((tag, i) => (
+                                            <span
+                                                key={i}
+                                                className="inline-flex items-center px-2 py-0.5 rounded-full bg-primary/10 text-primary text-xs font-medium"
+                                            >
+                                                {tag.startsWith('#') ? tag : `#${tag}`}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 
