@@ -161,6 +161,7 @@ const systemPrompt = `You are a Viral Script Architect specializing in short-for
 - Bridges must be 1 sentence, max 15 words
 - Framework rationale must be 1 sentence, max 20 words
 - Hook types must vary across the 3 options (don't use 3 questions in a row)
+- **NEVER repeat the hook or bridge in script_content** - the body must be NEW content that follows from the bridge
 
 ### BRIDGE EXAMPLES (Critical):
 ❌ BAD (Generic bridge that works for any hook):
