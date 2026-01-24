@@ -1,5 +1,7 @@
 // lib/types.ts
 
+export type Platform = 'tiktok' | 'twitter';
+
 export interface ContentClassification {
     content_type: 'tutorial' | 'story' | 'opinion' | 'general';
     recommended_frameworks: string[];
@@ -33,8 +35,8 @@ export interface SameTopicVariation {
     hooks: HookOption[];                // 3 distinct hook options with bridges
     script_content: ScriptSegment[];    // Visual cuts - distinct segments
     retention_tactic: string;           // Strategy explanation
-    hashtags: string[];                 // 5 TikTok-relevant hashtags
-    video_title: string;                // Short TikTok video title (1-2 lines)
+    hashtags?: string[];                // TikTok only: 5 hashtags (optional for Twitter)
+    video_title: string;                // TikTok caption or Tweet text
 }
 
 export interface AdjacentTopicVariation {
@@ -43,12 +45,14 @@ export interface AdjacentTopicVariation {
     script_content: ScriptSegment[];    // Visual cuts - distinct segments
     pivot_topic: string;
     structure_preserved: string;
-    hashtags: string[];                 // 5 TikTok-relevant hashtags
-    video_title: string;                // Short TikTok video title (1-2 lines)
+    hashtags?: string[];                // TikTok only: 5 hashtags (optional for Twitter)
+    video_title: string;                // TikTok caption or Tweet text
 }
 
 export interface AnalysisResult {
     classification?: ContentClassification;
+    platform?: Platform;
+    inputSegments?: number;
     analysis: ContentAnalysis;
     same_topic_variations: SameTopicVariation[];
     adjacent_topic_variations: AdjacentTopicVariation[];
@@ -67,6 +71,7 @@ export interface Session {
 export interface OptimizeRequest {
     content: string;
     inputType: 'script' | 'transcribed';
+    platform?: Platform;
 }
 
 export interface VideoIdea {

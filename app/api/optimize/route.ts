@@ -3,6 +3,25 @@ import { generateObject } from 'ai';
 import { z } from 'zod';
 import { NextRequest, NextResponse } from 'next/server';
 
+// Platform types
+type Platform = 'tiktok' | 'twitter';
+
+// Analyze input structure to determine segment count for shape matching
+function analyzeInputStructure(content: string): { segmentCount: number; minSegments: number; maxSegments: number } {
+    // Split by double newlines, sentence endings, or natural breaks
+    const segments = content
+        .split(/\n\n+|(?<=[.!?])\s+(?=[A-Z])/)
+        .map(s => s.trim())
+        .filter(s => s.length > 10); // Filter out very short segments
+
+    const segmentCount = Math.max(3, segments.length); // At least 3 segments
+    return {
+        segmentCount,
+        minSegments: Math.max(2, Math.floor(segmentCount * 0.8)),
+        maxSegments: Math.max(4, Math.ceil(segmentCount * 1.2)),
+    };
+}
+
 // ENHANCED SCHEMA: Bridge Logic + Framework Metadata + Hook Types
 // Content classification schema for framework recommendations
 const classificationSchema = z.object({
@@ -11,48 +30,58 @@ const classificationSchema = z.object({
     classification_reason: z.string().describe('Brief reason for this classification (1 sentence)'),
 });
 
-const analysisSchema = z.object({
-    analysis: z.object({
-        hook: z.string().describe('The specific hook used in the original'),
-        structure: z.string().describe('The narrative arc'),
-        retention_mechanics: z.string().describe('Psychological triggers used'),
-        niche_and_audience: z.string().describe('Target audience definition'),
-        topic_angle: z.string().describe('The specific angle taken'),
-        emotional_driver: z.string().describe('Core emotion'),
-    }),
+const analysisSchema = (minSegments: number, maxSegments: number, platform: Platform) => {
+    // Different descriptions based on platform
+    const hashtagsDesc = platform === 'tiktok'
+        ? '5 TikTok-relevant hashtags (include # symbol). Mix trending + niche + topic-specific.'
+        : 'Optional hashtags (leave empty array for Twitter).';
+    const videoTitleDesc = platform === 'tiktok'
+        ? 'Short catchy TikTok video title/caption (1-2 lines, max 100 chars). Creates curiosity or FOMO.'
+        : 'Engaging tweet text (max 280 chars). Creates curiosity or sparks debate.';
 
-    same_topic_variations: z.array(z.object({
-        framework: z.string().describe('The Viral Framework used: "The Myth Buster", "The Negative Case Study", or "The X vs Y"'),
-        framework_rationale: z.string().describe('Why this framework works for this topic (1 sentence, max 20 words)'),
-        hooks: z.array(z.object({
-            hook: z.string().describe('The scroll-stopping opening line.'),
-            bridge: z.string().describe('A 1-sentence transition (max 15 words) that connects THIS specific hook to the main body smoothly.'),
-            hook_type: z.enum(['question', 'statement', 'story', 'statistic']).describe('The psychological trigger type'),
-        })).length(3).describe('3 distinct hooks with different types'),
-        script_content: z.array(z.object({
-            text: z.string().describe('A distinct beat/cut of the script. Keep it punchy (1-2 sentences max).'),
-        })).min(4).max(6).describe('The core body of the script (excluding hook/bridge). 4-6 visual cuts.'),
-        retention_tactic: z.string().describe('Specific retention strategy used'),
-        hashtags: z.array(z.string()).length(5).describe('5 TikTok-relevant hashtags (include # symbol). Mix trending + niche + topic-specific.'),
-        video_title: z.string().describe('Short catchy TikTok video title/caption (1-2 lines, max 100 chars). Creates curiosity or FOMO.'),
-    })).length(3).describe('3 variations using the 3 core frameworks'),
+    return z.object({
+        analysis: z.object({
+            hook: z.string().describe('The specific hook used in the original'),
+            structure: z.string().describe('The narrative arc'),
+            retention_mechanics: z.string().describe('Psychological triggers used'),
+            niche_and_audience: z.string().describe('Target audience definition'),
+            topic_angle: z.string().describe('The specific angle taken'),
+            emotional_driver: z.string().describe('Core emotion'),
+        }),
 
-    adjacent_topic_variations: z.array(z.object({
-        pivot_type: z.string().describe('The pivot: "The Common Trap", "The Industry Secret", or "The Next Level"'),
-        hooks: z.array(z.object({
-            hook: z.string().describe('The scroll-stopping opening line.'),
-            bridge: z.string().describe('A 1-sentence transition (max 15 words) connecting this hook to the body.'),
-            hook_type: z.enum(['question', 'statement', 'story', 'statistic']).describe('The psychological trigger type'),
-        })).length(3),
-        script_content: z.array(z.object({
-            text: z.string().describe('A distinct beat/cut (1-2 sentences).'),
-        })).min(4).max(6),
-        pivot_topic: z.string().describe('The specific adjacent topic'),
-        structure_preserved: z.string().describe('Which structural element was kept'),
-        hashtags: z.array(z.string()).length(5).describe('5 TikTok-relevant hashtags (include # symbol). Mix trending + niche + topic-specific.'),
-        video_title: z.string().describe('Short catchy TikTok video title/caption (1-2 lines, max 100 chars). Creates curiosity or FOMO.'),
-    })).length(3).describe('3 adjacent topic pivots'),
-});
+        same_topic_variations: z.array(z.object({
+            framework: z.string().describe('The Viral Framework used: "The Myth Buster", "The Negative Case Study", or "The X vs Y"'),
+            framework_rationale: z.string().describe('Why this framework works for this topic (1 sentence, max 20 words)'),
+            hooks: z.array(z.object({
+                hook: z.string().describe('The scroll-stopping opening line.'),
+                bridge: z.string().describe('A 1-sentence transition (max 15 words) that connects THIS specific hook to the main body smoothly.'),
+                hook_type: z.enum(['question', 'statement', 'story', 'statistic']).describe('The psychological trigger type'),
+            })).length(3).describe('3 distinct hooks with different types'),
+            script_content: z.array(z.object({
+                text: z.string().describe('A distinct beat/segment of the script matching the input structure.'),
+            })).min(minSegments).max(maxSegments).describe(`${minSegments}-${maxSegments} segments matching the input script shape.`),
+            retention_tactic: z.string().describe('Specific retention strategy used'),
+            hashtags: z.array(z.string()).describe(hashtagsDesc),
+            video_title: z.string().describe(videoTitleDesc),
+        })).length(3).describe('3 variations using the 3 core frameworks'),
+
+        adjacent_topic_variations: z.array(z.object({
+            pivot_type: z.string().describe('The pivot: "The Common Trap", "The Industry Secret", or "The Next Level"'),
+            hooks: z.array(z.object({
+                hook: z.string().describe('The scroll-stopping opening line.'),
+                bridge: z.string().describe('A 1-sentence transition (max 15 words) connecting this hook to the body.'),
+                hook_type: z.enum(['question', 'statement', 'story', 'statistic']).describe('The psychological trigger type'),
+            })).length(3),
+            script_content: z.array(z.object({
+                text: z.string().describe('A distinct beat/segment matching the input structure.'),
+            })).min(minSegments).max(maxSegments),
+            pivot_topic: z.string().describe('The specific adjacent topic'),
+            structure_preserved: z.string().describe('Which structural element was kept'),
+            hashtags: z.array(z.string()).describe(hashtagsDesc),
+            video_title: z.string().describe(videoTitleDesc),
+        })).length(3).describe('3 adjacent topic pivots'),
+    });
+};
 
 // IMPROVED SYSTEM PROMPT: Framework Enforcement + Bridge Law
 const systemPrompt = `You are a Viral Script Architect specializing in short-form content optimization.
@@ -203,7 +232,7 @@ function validateScriptQuality(result: any): { passed: boolean; issues: string[]
 
 export async function POST(request: NextRequest) {
     try {
-        const { content, inputType = 'script' } = await request.json();
+        const { content, inputType = 'script', platform = 'tiktok' } = await request.json();
 
         if (!content || content.trim().length === 0) {
             return NextResponse.json({ error: 'Content is required' }, { status: 400 });
@@ -212,6 +241,17 @@ export async function POST(request: NextRequest) {
         if (!process.env.OPENAI_API_KEY) {
             return NextResponse.json({ error: 'OpenAI API key not configured' }, { status: 500 });
         }
+
+        // Validate platform
+        const validPlatforms: Platform[] = ['tiktok', 'twitter'];
+        const selectedPlatform: Platform = validPlatforms.includes(platform) ? platform : 'tiktok';
+
+        // Analyze input structure for shape matching
+        const inputStructure = analyzeInputStructure(content);
+        console.log(`📊 Input structure: ${inputStructure.segmentCount} segments (range: ${inputStructure.minSegments}-${inputStructure.maxSegments})`);
+
+        // Build dynamic schema based on input structure and platform
+        const dynamicSchema = analysisSchema(inputStructure.minSegments, inputStructure.maxSegments, selectedPlatform);
 
         // Classification prompt (runs with cheaper model)
         const classificationPrompt = `Classify this content and recommend which viral frameworks would work best:
@@ -232,14 +272,27 @@ Framework Options:
 - "The Industry Secret": Best for insider tips
 - "The Next Level": Best for advanced tutorials`;
 
+        // Platform-specific instructions
+        const platformInstructions = selectedPlatform === 'tiktok'
+            ? 'Generate 5 trending TikTok hashtags and a catchy video caption for each variation.'
+            : 'Generate an engaging tweet text (max 280 chars) for each variation. Leave hashtags empty.';
+
         const userPrompt = `Analyze this ${inputType} and generate 3 Structural Variations using the prescribed frameworks (Myth Buster, Negative Case Study, X vs Y Comparison):
         
-        INPUT CONTENT:
-        """
-        ${content}
-        """
+**CRITICAL - SHAPE MATCHING:**
+The input has approximately ${inputStructure.segmentCount} natural segments/beats.
+Your output script_content MUST have ${inputStructure.minSegments}-${inputStructure.maxSegments} segments.
+Match the pacing and rhythm of the original. Do NOT condense or expand excessively.
+
+**Platform: ${selectedPlatform.toUpperCase()}**
+${platformInstructions}
         
-        Remember: Each hook needs its own unique bridge that flows naturally into the body content.
+INPUT CONTENT:
+"""
+${content}
+"""
+        
+Remember: Each hook needs its own unique bridge that flows naturally into the body content.
         `;
 
         // Run classification and main generation in parallel for speed
@@ -251,7 +304,7 @@ Framework Options:
             }),
             generateObject({
                 model: openai('gpt-4o'),
-                schema: analysisSchema,
+                schema: dynamicSchema,
                 system: systemPrompt,
                 prompt: userPrompt,
             }),
@@ -263,9 +316,11 @@ Framework Options:
             console.warn('⚠️  Quality validation warnings:', validation.issues);
         }
 
-        // Return combined result with classification
+        // Return combined result with classification and platform info
         return NextResponse.json({
             classification: classificationResult.object,
+            platform: selectedPlatform,
+            inputSegments: inputStructure.segmentCount,
             ...analysisResult.object,
         });
     } catch (error) {
