@@ -3,7 +3,7 @@
 export type Platform = 'tiktok' | 'twitter';
 
 export interface ContentClassification {
-    content_type: 'tutorial' | 'story' | 'opinion' | 'general';
+    content_type: 'tutorial' | 'story' | 'opinion' | 'breakdown' | 'general';
     recommended_frameworks: string[];
     classification_reason: string;
 }
