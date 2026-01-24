@@ -8,24 +8,24 @@ type Platform = 'tiktok' | 'twitter';
 
 // Analyze input structure to determine segment count for shape matching
 function analyzeInputStructure(content: string): { segmentCount: number; minSegments: number; maxSegments: number } {
-    // Split by double newlines, sentence endings, or natural breaks
+    // Split by newlines (lists) OR sentence endings (narrative)
     const segments = content
-        .split(/\n\n+|(?<=[.!?])\s+(?=[A-Z])/)
+        .split(/\n+|(?<=[.!?])\s+(?=[A-Z])/)
         .map(s => s.trim())
-        .filter(s => s.length > 10); // Filter out very short segments
+        .filter(s => s.length >= 5); // Lower threshold to catch list headers like "Frontend:"
 
     const segmentCount = Math.max(3, segments.length); // At least 3 segments
     return {
         segmentCount,
         minSegments: Math.max(2, Math.floor(segmentCount * 0.8)),
-        maxSegments: Math.max(4, Math.ceil(segmentCount * 1.2)),
+        maxSegments: Math.max(4, Math.ceil(segmentCount * 1.5)), // Allow more expansion for lists
     };
 }
 
 // ENHANCED SCHEMA: Bridge Logic + Framework Metadata + Hook Types
 // Content classification schema for framework recommendations
 const classificationSchema = z.object({
-    content_type: z.enum(['tutorial', 'story', 'opinion', 'general']).describe('The type of content'),
+    content_type: z.enum(['tutorial', 'story', 'opinion', 'breakdown', 'general']).describe('The type of content'),
     recommended_frameworks: z.array(z.string()).describe('2-3 frameworks that work best for this content type'),
     classification_reason: z.string().describe('Brief reason for this classification (1 sentence)'),
 });
@@ -50,7 +50,7 @@ const analysisSchema = (minSegments: number, maxSegments: number, platform: Plat
         }),
 
         same_topic_variations: z.array(z.object({
-            framework: z.string().describe('The Viral Framework used: "The Myth Buster", "The Negative Case Study", or "The X vs Y"'),
+            framework: z.string().describe('The Viral Framework used: "The Myth Buster", "The Negative Case Study", "The X vs Y", or "The Direct Breakdown"'),
             framework_rationale: z.string().describe('Why this framework works for this topic (1 sentence, max 20 words)'),
             hooks: z.array(z.object({
                 hook: z.string().describe('The scroll-stopping opening line.'),
@@ -88,12 +88,16 @@ const systemPrompt = `You are a Viral Script Architect specializing in short-for
 
 ### CORE RULES:
 1. **Bridge Law**: Every hook MUST have a unique bridge sentence that creates smooth narrative flow into the body.
-2. **Framework Enforcement**: Use ONLY the 3 prescribed frameworks. No generic structures.
+2. **Framework Matching**: Select the single best framework for the content type:
+   - Use "The Direct Breakdown" for lists, tech stacks, step-by-step guides
+   - Use "The Myth Buster" for contrarian takes and opinion content
+   - Use "The Negative Case Study" for cautionary stories and warnings
+   - Use "The X vs Y" for tutorials comparing approaches
 3. **Retention First**: Every sentence must justify its existence. Cut ruthlessly.
 4. **Grade 5 Language**: No jargon, no fluff, no "In this video..." openers.
 5. **Hook Type Diversity**: Across the 3 hooks, use different psychological triggers (question, statement, story, statistic).
 
-### THE 3 FRAMEWORKS FOR SAME-TOPIC VARIATIONS:
+### THE 4 FRAMEWORKS FOR SAME-TOPIC VARIATIONS:
 
 **Framework A: The Myth Buster (Contrarian)**
 - Hook: State a widely-held belief as a question or bold statement
@@ -124,6 +128,17 @@ const systemPrompt = `You are a Viral Script Architect specializing in short-for
   * Hook: "Stop using a to-do list."
   * Bridge: "Here's what high performers do instead."
   * Body: Cut 1: "To-do lists create decision fatigue..." etc.
+
+**Framework D: The Direct Breakdown (Educational/List)**
+- Best for: Tech stacks, recipes, step-by-step guides, "Top 3" lists, feature breakdowns
+- Hook: A clear promise of value or "The [Quality] to [Result]"
+- Bridge: A quick qualifier ("It's simpler than you think." / "Steal this exact setup." / "Screenshot this.")
+- Body Structure: [Item 1] → [Item 2] → [Item 3] → [Summary/Outcome]
+- Tone: Punchy, expert, no-nonsense, fast-paced. No fake drama.
+- Example Flow:
+  * Hook: "Stop overcomplicating your tech stack."
+  * Bridge: "Here's the only setup you need to ship fast."
+  * Body: Cut 1: "Frontend: Next.js for speed..." Cut 2: "Backend: Supabase for scale..." etc.
 
 ### THE 3 PIVOTS FOR ADJACENT-TOPIC VARIATIONS:
 
@@ -161,6 +176,12 @@ const systemPrompt = `You are a Viral Script Architect specializing in short-for
 
 ✅ GOOD (Concise):
   Bridge: "And the results shocked me."
+
+**For Framework D (Direct Breakdown):**
+✅ GOOD: "Here's the exact list."
+✅ GOOD: "Screenshot this."
+✅ GOOD: "Steal this setup."
+❌ BAD: "Let me explain to you exactly why these items are chosen for this specific purpose."
 
 ### TIKTOK HASHTAGS & VIDEO TITLE:
 
@@ -262,12 +283,14 @@ Content Types:
 - tutorial: How-to content, step-by-step guides, educational
 - story: Personal narratives, case studies, experiences  
 - opinion: Contrarian takes, hot takes, controversial views
+- breakdown: Lists, tech stacks, ingredient lists, feature lists, itemized content
 - general: Mixed content, informational
 
 Framework Options:
 - "The Myth Buster": Best for opinion/contrarian content
 - "The Negative Case Study": Best for story-based warnings
 - "The X vs Y": Best for tutorials comparing approaches
+- "The Direct Breakdown": Best for lists, stacks, and itemized content
 - "The Common Trap": Best for follow-up warnings
 - "The Industry Secret": Best for insider tips
 - "The Next Level": Best for advanced tutorials`;
@@ -277,7 +300,7 @@ Framework Options:
             ? 'Generate 5 trending TikTok hashtags and a catchy video caption for each variation.'
             : 'Generate an engaging tweet text (max 280 chars) for each variation. Leave hashtags empty.';
 
-        const userPrompt = `Analyze this ${inputType} and generate 3 Structural Variations using the prescribed frameworks (Myth Buster, Negative Case Study, X vs Y Comparison):
+        const userPrompt = `Analyze this ${inputType} and generate 3 Structural Variations using the prescribed frameworks (Myth Buster, Negative Case Study, X vs Y, or Direct Breakdown):
         
 **CRITICAL - SHAPE MATCHING:**
 The input has approximately ${inputStructure.segmentCount} natural segments/beats.
