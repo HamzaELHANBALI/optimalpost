@@ -14,45 +14,45 @@ const patternAnalysisSchema = z.object({
     niche_identification: z.object({
         primary_niche: z.string().describe('The main content niche (e.g., "tech productivity", "fitness for beginners")'),
         confidence_score: z.number().min(0).max(100).describe('Confidence in niche identification (0-100)'),
-        supporting_evidence: z.array(z.string()).describe('Specific examples from sessions supporting this niche'),
-        outlier_sessions: z.array(z.number()).describe('Session indices that deviate from the main niche (0-indexed)'),
-        sub_niches: z.array(z.string()).describe('Secondary topics within the main niche'),
+        supporting_evidence: z.array(z.string()).default([]).describe('Specific examples from sessions supporting this niche'),
+        outlier_sessions: z.array(z.number()).default([]).describe('Session indices that deviate from the main niche (0-indexed)'),
+        sub_niches: z.array(z.string()).default([]).describe('Secondary topics within the main niche'),
     }),
     successful_patterns: z.object({
         top_hook_types: z.array(z.object({
-            type: z.enum(['question', 'statement', 'story', 'statistic']),
+            type: z.string().describe('Hook type: question, statement, story, or statistic'),
             frequency: z.number().describe('How many times this type appears'),
-            examples: z.array(z.string()).min(1).max(3).describe('1-3 example hooks'),
-            effectiveness_note: z.string().describe('Why this type works for this niche'),
-        })).describe('Hook types ranked by frequency'),
+            examples: z.array(z.string()).default([]).describe('1-3 example hooks'),
+            effectiveness_note: z.string().optional().describe('Why this type works for this niche'),
+        })).default([]).describe('Hook types ranked by frequency'),
         common_frameworks: z.array(z.object({
             framework: z.string().describe('Framework name'),
             frequency: z.number(),
-            use_cases: z.string().describe('What topics this framework is used for'),
-        })),
+            use_cases: z.string().optional().describe('What topics this framework is used for'),
+        })).default([]),
         emotional_drivers: z.array(z.object({
             emotion: z.string().describe('Core emotion (e.g., "fear of missing out", "inspiration")'),
             frequency: z.number(),
-            trigger_phrases: z.array(z.string()).describe('Phrases that trigger this emotion'),
-        })),
+            trigger_phrases: z.array(z.string()).default([]).describe('Phrases that trigger this emotion'),
+        })).default([]),
         recurring_topics: z.array(z.object({
             topic: z.string().describe('Topic theme'),
             frequency: z.number(),
-            related_keywords: z.array(z.string()).describe('Keywords associated with this topic'),
-        })),
+            related_keywords: z.array(z.string()).default([]).describe('Keywords associated with this topic'),
+        })).default([]),
         pacing_style: z.object({
-            avg_segments: z.number().describe('Average number of segments/beats'),
-            preferred_length: z.enum(['short', 'medium', 'long']).describe('Typical content length'),
-            rhythm: z.string().describe('Pacing description (e.g., "fast-paced with quick cuts")'),
+            avg_segments: z.number().default(5).describe('Average number of segments/beats'),
+            preferred_length: z.string().default('medium').describe('Typical content length: short, medium, or long'),
+            rhythm: z.string().default('fast-paced').describe('Pacing description'),
         }),
     }),
     audience_insights: z.object({
-        pain_points: z.array(z.string()).describe('Problems the audience faces'),
-        aspirations: z.array(z.string()).describe('What the audience wants to achieve'),
-        knowledge_level: z.enum(['beginner', 'intermediate', 'advanced', 'mixed']).describe('Audience expertise level'),
-        demographics: z.string().describe('Inferred audience demographics and characteristics'),
+        pain_points: z.array(z.string()).default([]).describe('Problems the audience faces'),
+        aspirations: z.array(z.string()).default([]).describe('What the audience wants to achieve'),
+        knowledge_level: z.string().default('mixed').describe('Audience expertise level: beginner, intermediate, advanced, or mixed'),
+        demographics: z.string().default('General audience').describe('Inferred audience demographics and characteristics'),
     }),
-    content_gaps: z.array(z.string()).describe('Potential topics not yet covered that fit the niche'),
+    content_gaps: z.array(z.string()).default([]).describe('Potential topics not yet covered that fit the niche'),
 });
 
 const enhancedVideoIdeaSchema = z.object({
@@ -82,10 +82,10 @@ const enhancedVideoIdeaSchema = z.object({
         target_audience_segment: z.string().describe('Specific audience segment this appeals to'),
     })).min(3).max(20),
     diversity_check: z.object({
-        framework_distribution: z.record(z.string(), z.number()).describe('Count of each framework used'),
-        angle_distribution: z.record(z.string(), z.number()).describe('Count of each angle used'),
-        hook_type_distribution: z.record(z.string(), z.number()).describe('Count of each hook type'),
-        passes_diversity: z.boolean().describe('Whether ideas have sufficient variety'),
+        framework_summary: z.string().describe('Summary of frameworks used (e.g., "2x Direct Breakdown, 1x Myth Buster, 2x X vs Y")'),
+        angle_summary: z.string().describe('Summary of angles used (e.g., "2x beginner-friendly, 1x contrarian, 2x how-to")'),
+        hook_type_summary: z.string().describe('Summary of hook types (e.g., "3x question, 2x statement")'),
+        passes_diversity: z.boolean().describe('Whether ideas have sufficient variety (at least 2 different frameworks and angles)'),
     }),
 });
 
