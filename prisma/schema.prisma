@@ -87,6 +87,7 @@ model BrainstormSession {
   ideas        Json     // Array of VideoIdea objects
   sessionIds   String[] // IDs of AnalysisSessions used for generation
   ideaCount    Int
+  metadata     Json?    // Pattern analysis, outlier info, quality metrics
 
   createdAt    DateTime @default(now())
 
