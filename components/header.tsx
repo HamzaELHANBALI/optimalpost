@@ -4,15 +4,16 @@ import { ProvenPostLogo } from '@/components/logo';
 import { AuthButton } from '@/components/auth/auth-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
-import { History } from 'lucide-react';
+import { History, Star } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 
 interface HeaderProps {
   onHistoryClick?: () => void;
+  onFavoritesClick?: () => void;
   showHistory?: boolean;
 }
 
-export function Header({ onHistoryClick, showHistory = false }: HeaderProps) {
+export function Header({ onHistoryClick, onFavoritesClick, showHistory = false }: HeaderProps) {
   const { user } = useAuth();
 
   return (
@@ -23,15 +24,26 @@ export function Header({ onHistoryClick, showHistory = false }: HeaderProps) {
         </div>
         <div className="flex items-center gap-2">
           {user && showHistory && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onHistoryClick}
-              className="gap-2"
-            >
-              <History className="h-4 w-4" />
-              <span className="hidden sm:inline">History</span>
-            </Button>
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onFavoritesClick}
+                className="gap-2"
+              >
+                <Star className="h-4 w-4" />
+                <span className="hidden sm:inline">Favorites</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onHistoryClick}
+                className="gap-2"
+              >
+                <History className="h-4 w-4" />
+                <span className="hidden sm:inline">History</span>
+              </Button>
+            </>
           )}
           <ThemeToggle />
           <AuthButton />
@@ -40,4 +52,3 @@ export function Header({ onHistoryClick, showHistory = false }: HeaderProps) {
     </header>
   );
 }
-

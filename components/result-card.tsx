@@ -1,10 +1,13 @@
 'use client';
 
-import { Copy, Check, MousePointerClick, Info, Video, Hash } from 'lucide-react';
+import { Copy, Check, MousePointerClick, Info, Video, Hash, Edit3, Download } from 'lucide-react';
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScriptRunner } from '@/components/script-runner';
+import { ScriptEditor } from '@/components/script-editor';
+import { ExportDialog } from '@/components/export-dialog';
+import { FavoritesButton } from '@/components/favorites-button';
 import {
     Tooltip,
     TooltipContent,
@@ -75,6 +78,8 @@ export function ResultCard({
     const [copied, setCopied] = useState(false);
     const [selectedHookIndex, setSelectedHookIndex] = useState(0);
     const [scriptRunnerOpen, setScriptRunnerOpen] = useState(false);
+    const [scriptEditorOpen, setScriptEditorOpen] = useState(false);
+    const [exportDialogOpen, setExportDialogOpen] = useState(false);
 
     const activeHook = hooks[selectedHookIndex];
 
@@ -139,6 +144,24 @@ export function ResultCard({
                             </TooltipProvider>
                         )}
                         <div className="flex items-center gap-1">
+                            <FavoritesButton
+                                hook={activeHook}
+                                segments={content}
+                                framework={framework}
+                                pivotType={pivotType}
+                                hashtags={hashtags}
+                                videoTitle={videoTitle}
+                                className="-mt-1 opacity-0 group-hover:opacity-100"
+                            />
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 -mt-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-primary"
+                                onClick={() => setScriptEditorOpen(true)}
+                                title="Edit Script"
+                            >
+                                <Edit3 className="h-4 w-4" />
+                            </Button>
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -151,13 +174,11 @@ export function ResultCard({
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className={cn(
-                                    "h-8 w-8 -mt-1 -mr-2 transition-opacity",
-                                    copied ? "text-green-600 bg-green-50 dark:bg-green-950" : "text-muted-foreground opacity-0 group-hover:opacity-100"
-                                )}
-                                onClick={handleCopy}
+                                className="h-8 w-8 -mt-1 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity hover:text-primary"
+                                onClick={() => setExportDialogOpen(true)}
+                                title="Export"
                             >
-                                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                                <Download className="h-4 w-4" />
                             </Button>
                         </div>
                     </div>
@@ -314,6 +335,28 @@ export function ResultCard({
                 onOpenChange={setScriptRunnerOpen}
                 hook={activeHook}
                 segments={content}
+            />
+
+            {/* Script Editor Dialog */}
+            <ScriptEditor
+                open={scriptEditorOpen}
+                onOpenChange={setScriptEditorOpen}
+                hook={activeHook}
+                segments={content}
+                framework={framework}
+                pivotType={pivotType}
+            />
+
+            {/* Export Dialog */}
+            <ExportDialog
+                open={exportDialogOpen}
+                onOpenChange={setExportDialogOpen}
+                hook={activeHook}
+                segments={content}
+                framework={framework}
+                pivotType={pivotType}
+                hashtags={hashtags}
+                videoTitle={videoTitle}
             />
         </motion.div>
     );

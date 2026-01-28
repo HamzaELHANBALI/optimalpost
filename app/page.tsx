@@ -8,6 +8,7 @@ import { AlgorithmSection } from '@/components/landing/algorithm-section';
 import { HowItWorks } from '@/components/landing/how-it-works';
 import { ValueSection } from '@/components/landing/value-section';
 import { Dashboard } from '@/components/dashboard';
+import { FavoritesSidebar } from '@/components/favorites-sidebar';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useState } from 'react';
@@ -16,6 +17,7 @@ import { AuthDialog } from '@/components/auth/auth-dialog';
 export default function Home() {
   const { user, loading } = useAuth();
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [favoritesOpen, setFavoritesOpen] = useState(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
 
   // Show loading state
@@ -31,8 +33,13 @@ export default function Home() {
   if (user) {
     return (
       <div className="min-h-screen">
-        <Header onHistoryClick={() => setHistoryOpen(true)} showHistory />
+        <Header
+          onHistoryClick={() => setHistoryOpen(true)}
+          onFavoritesClick={() => setFavoritesOpen(true)}
+          showHistory
+        />
         <Dashboard historyOpen={historyOpen} onHistoryOpenChange={setHistoryOpen} />
+        <FavoritesSidebar open={favoritesOpen} onOpenChange={setFavoritesOpen} />
       </div>
     );
   }
