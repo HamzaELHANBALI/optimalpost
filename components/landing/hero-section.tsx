@@ -2,8 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles, TrendingUp } from 'lucide-react';
-import { AuthButton } from '@/components/auth/auth-button';
+import { ArrowRight, Sparkles, TrendingUp, Mic, Layers } from 'lucide-react';
 import { useState } from 'react';
 import { AuthDialog } from '@/components/auth/auth-dialog';
 
@@ -27,7 +26,7 @@ export function HeroSection() {
           >
             <Sparkles className="h-4 w-4 text-primary" />
             <span className="text-muted-foreground">
-              Turn Viral Content Into Your Content Strategy
+              Powered by Pattern Recognition from 1000s of Viral Scripts
             </span>
           </motion.div>
 
@@ -38,11 +37,10 @@ export function HeroSection() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-4xl font-bold tracking-tight text-foreground sm:text-6xl lg:text-7xl"
           >
-            Extract the{' '}
+            Stop Guessing.{' '}
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Winning Formula
-            </span>{' '}
-            from Your Best Content
+              Start Scaling.
+            </span>
           </motion.h1>
 
           {/* Subheadline */}
@@ -52,8 +50,9 @@ export function HeroSection() {
             transition={{ duration: 0.5, delay: 0.2 }}
             className="mt-6 text-lg leading-8 text-muted-foreground sm:text-xl"
           >
-            Paste your viral script and let AI analyze the patterns, extract the hook,
-            and generate high-performing variations. Double down on what works.
+            Turn your one viral hit into a content empire. Our AI extracts the exact formula
+            from your best-performing content and generates 10+ high-converting variations—
+            preserving your voice, your style, your winning patterns.
           </motion.p>
 
           {/* CTA Buttons */}
@@ -68,7 +67,7 @@ export function HeroSection() {
               onClick={() => setAuthDialogOpen(true)}
               className="group h-12 px-8 text-base font-semibold shadow-lg transition-all hover:shadow-xl"
             >
-              Get Started Free
+              Start Scaling Free
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
             <Button
@@ -76,30 +75,34 @@ export function HeroSection() {
               size="lg"
               className="h-12 px-8 text-base"
               onClick={() => {
-                document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('algorithm')?.scrollIntoView({ behavior: 'smooth' });
               }}
             >
-              Learn More
+              See How It Works
             </Button>
           </motion.div>
 
-          {/* Stats or trust indicators */}
+          {/* Trust indicators - Updated */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-16 flex flex-wrap items-center justify-center gap-8 text-sm text-muted-foreground"
+            className="mt-16 flex flex-wrap items-center justify-center gap-x-8 gap-y-4 text-sm text-muted-foreground"
           >
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
-              <span>AI-Powered Analysis</span>
+              <span>5 Viral Frameworks</span>
             </div>
             <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-primary" />
+              <Layers className="h-5 w-5 text-primary" />
               <span>10+ Variations Per Script</span>
             </div>
             <div className="flex items-center gap-2">
-              <span>✓</span>
+              <Mic className="h-5 w-5 text-primary" />
+              <span>Instant Transcription</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-green-500">✓</span>
               <span>No Credit Card Required</span>
             </div>
           </motion.div>
@@ -110,4 +113,3 @@ export function HeroSection() {
     </section>
   );
 }
-

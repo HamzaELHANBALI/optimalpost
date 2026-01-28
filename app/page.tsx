@@ -4,7 +4,9 @@ import { useAuth } from '@/hooks/use-auth';
 import { Header } from '@/components/header';
 import { HeroSection } from '@/components/landing/hero-section';
 import { FeaturesSection } from '@/components/landing/features-section';
+import { AlgorithmSection } from '@/components/landing/algorithm-section';
 import { HowItWorks } from '@/components/landing/how-it-works';
+import { ValueSection } from '@/components/landing/value-section';
 import { Dashboard } from '@/components/dashboard';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -42,16 +44,18 @@ export default function Home() {
       <main>
         <HeroSection />
         <FeaturesSection />
+        <AlgorithmSection />
         <HowItWorks />
+        <ValueSection />
         {/* Final CTA Section */}
-        <section className="py-24 sm:py-32 bg-muted/30">
+        <section className="py-24 sm:py-32 bg-gradient-to-b from-background to-muted/30">
           <div className="mx-auto max-w-7xl px-6 lg:px-8">
             <div className="mx-auto max-w-2xl text-center">
               <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
                 Ready to Scale Your Content?
               </h2>
               <p className="mt-4 text-lg text-muted-foreground">
-                Start analyzing your viral scripts and generating high-performing variations today.
+                Stop guessing what works. Start replicating your proven success.
               </p>
               <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
                 <Button
@@ -70,9 +74,12 @@ export default function Home() {
                     document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' });
                   }}
                 >
-                  Learn More
+                  Explore Features
                 </Button>
               </div>
+              <p className="mt-6 text-sm text-muted-foreground">
+                No credit card required • Start with your first viral script
+              </p>
             </div>
           </div>
         </section>
